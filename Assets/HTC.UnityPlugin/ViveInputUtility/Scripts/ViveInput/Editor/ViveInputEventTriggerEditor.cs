@@ -93,7 +93,7 @@ namespace HTC.UnityPlugin.Vive
                 RemoveEntry(toBeRemovedEntry);
             }
 
-            var buttonWidth = (EditorGUIUtility.currentViewWidth / 2) - 12f;
+            var buttonWidth = (EditorGUIUtility.currentViewWidth / 2) - 25f;
 
             GUILayout.BeginHorizontal();
             {
