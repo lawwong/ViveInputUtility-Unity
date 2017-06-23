@@ -8,6 +8,7 @@ using UnityEngine.Events;
 
 namespace HTC.UnityPlugin.Vive
 {
+    // Use this helper component to combine multiple Vive inputs into one virtual button
     public class ViveInputVirtualButton : MonoBehaviour
     {
         public enum InputsOperatorEnum
@@ -19,8 +20,8 @@ namespace HTC.UnityPlugin.Vive
         [Serializable]
         public class InputEntry
         {
-            public ViveRoleProperty viveRole;
-            public ControllerButton button;
+            public ViveRoleProperty viveRole = ViveRoleProperty.New(HandRole.RightHand);
+            public ControllerButton button = ControllerButton.Trigger;
         }
 
         [Serializable]
@@ -40,17 +41,17 @@ namespace HTC.UnityPlugin.Vive
         [SerializeField]
         private List<InputEntry> m_inputs = new List<InputEntry>();
         [SerializeField]
-        private OutputEvent m_onPress = new OutputEvent();
+        private OutputEvent m_onVirtualPress = new OutputEvent();
         [SerializeField]
-        private OutputEvent m_onClick = new OutputEvent();
+        private OutputEvent m_onVirtualClick = new OutputEvent();
         [SerializeField]
-        private OutputEvent m_onPressDown = new OutputEvent();
+        private OutputEvent m_onVirtualPressDown = new OutputEvent();
         [SerializeField]
-        private OutputEvent m_onPressUp = new OutputEvent();
+        private OutputEvent m_onVirtualPressUp = new OutputEvent();
         [SerializeField]
-        private List<GameObject> m_toggleGameObjectOnClick = new List<GameObject>();
+        private List<GameObject> m_toggleGameObjectOnVirtualClick = new List<GameObject>();
         [SerializeField]
-        private List<Behaviour> m_toggleComponentOnClick = new List<Behaviour>();
+        private List<Behaviour> m_toggleComponentOnVirtualClick = new List<Behaviour>();
 
         private int m_updatedFrameCount;
         private bool m_updateActivated = false;
@@ -74,11 +75,13 @@ namespace HTC.UnityPlugin.Vive
 
         public InputsOperatorEnum logicGate { get { return m_inputsOperator; } }
         public List<InputEntry> inputs { get { return m_inputs; } }
+        public List<GameObject> toggleGameObjectOnVirtualClick { get { return m_toggleGameObjectOnVirtualClick; } }
+        public List<Behaviour> toggleComponentOnVirtualClick { get { return m_toggleComponentOnVirtualClick; } }
 
-        public OutputEvent onPress { get { return m_onPress; } }
-        public OutputEvent onClick { get { return m_onClick; } }
-        public OutputEvent onPressDown { get { return m_onPressDown; } }
-        public OutputEvent onPressUp { get { return m_onPressUp; } }
+        public OutputEvent onPress { get { return m_onVirtualPress; } }
+        public OutputEvent onClick { get { return m_onVirtualClick; } }
+        public OutputEvent onPressDown { get { return m_onVirtualPressDown; } }
+        public OutputEvent onPressUp { get { return m_onVirtualPressUp; } }
 
         private bool isPress { get { return m_currState; } }
         private bool isDown { get { return !m_prevState && m_currState; } }
@@ -97,8 +100,6 @@ namespace HTC.UnityPlugin.Vive
                 viveRole = ViveRoleProperty.New(HandRole.RightHand),
                 button = ControllerButton.Trigger,
             });
-            m_toggleGameObjectOnClick.Add(null);
-            m_toggleComponentOnClick.Add(null);
         }
 #endif
 
@@ -185,9 +186,9 @@ namespace HTC.UnityPlugin.Vive
                         m_lastPressDownTime = timeNow;
 
                         // PressDown event
-                        if (m_onPressDown != null)
+                        if (m_onVirtualPressDown != null)
                         {
-                            m_onPressDown.Invoke(new OutputEventArgs()
+                            m_onVirtualPressDown.Invoke(new OutputEventArgs()
                             {
                                 senderObj = this,
                                 eventType = ButtonEventType.Down,
@@ -196,9 +197,9 @@ namespace HTC.UnityPlugin.Vive
                     }
 
                     // Press event
-                    if (m_onPress != null)
+                    if (m_onVirtualPress != null)
                     {
-                        m_onPress.Invoke(new OutputEventArgs()
+                        m_onVirtualPress.Invoke(new OutputEventArgs()
                         {
                             senderObj = this,
                             eventType = ButtonEventType.Press,
@@ -208,9 +209,9 @@ namespace HTC.UnityPlugin.Vive
                 else if (isUp)
                 {
                     // PressUp event
-                    if (m_onPressUp != null)
+                    if (m_onVirtualPressUp != null)
                     {
-                        m_onPressUp.Invoke(new OutputEventArgs()
+                        m_onVirtualPressUp.Invoke(new OutputEventArgs()
                         {
                             senderObj = this,
                             eventType = ButtonEventType.Up,
@@ -219,20 +220,20 @@ namespace HTC.UnityPlugin.Vive
 
                     if (timeNow - m_lastPressDownTime < ViveInput.clickInterval)
                     {
-                        for (int i = m_toggleGameObjectOnClick.Count - 1; i >= 0; --i)
+                        for (int i = m_toggleGameObjectOnVirtualClick.Count - 1; i >= 0; --i)
                         {
-                            if (m_toggleGameObjectOnClick[i] != null) { m_toggleGameObjectOnClick[i].SetActive(!m_toggleGameObjectOnClick[i].activeSelf); }
+                            if (m_toggleGameObjectOnVirtualClick[i] != null) { m_toggleGameObjectOnVirtualClick[i].SetActive(!m_toggleGameObjectOnVirtualClick[i].activeSelf); }
                         }
 
-                        for (int i = m_toggleComponentOnClick.Count - 1; i >= 0; --i)
+                        for (int i = m_toggleComponentOnVirtualClick.Count - 1; i >= 0; --i)
                         {
-                            if (m_toggleComponentOnClick[i] != null) { m_toggleComponentOnClick[i].enabled = !m_toggleComponentOnClick[i].enabled; }
+                            if (m_toggleComponentOnVirtualClick[i] != null) { m_toggleComponentOnVirtualClick[i].enabled = !m_toggleComponentOnVirtualClick[i].enabled; }
                         }
 
                         // Click event
-                        if (m_onClick != null)
+                        if (m_onVirtualClick != null)
                         {
-                            m_onClick.Invoke(new OutputEventArgs()
+                            m_onVirtualClick.Invoke(new OutputEventArgs()
                             {
                                 senderObj = this,
                                 eventType = ButtonEventType.Click,
@@ -254,9 +255,9 @@ namespace HTC.UnityPlugin.Vive
                 if (isUp)
                 {
                     // PressUp event
-                    if (m_onPressUp != null)
+                    if (m_onVirtualPressUp != null)
                     {
-                        m_onPressUp.Invoke(new OutputEventArgs()
+                        m_onVirtualPressUp.Invoke(new OutputEventArgs()
                         {
                             senderObj = this,
                             eventType = ButtonEventType.Up,
@@ -265,20 +266,20 @@ namespace HTC.UnityPlugin.Vive
 
                     if (timeNow - m_lastPressDownTime < ViveInput.clickInterval)
                     {
-                        for (int i = m_toggleGameObjectOnClick.Count - 1; i >= 0; --i)
+                        for (int i = m_toggleGameObjectOnVirtualClick.Count - 1; i >= 0; --i)
                         {
-                            if (m_toggleGameObjectOnClick[i] != null) { m_toggleGameObjectOnClick[i].SetActive(!m_toggleGameObjectOnClick[i].activeSelf); }
+                            if (m_toggleGameObjectOnVirtualClick[i] != null) { m_toggleGameObjectOnVirtualClick[i].SetActive(!m_toggleGameObjectOnVirtualClick[i].activeSelf); }
                         }
 
-                        for (int i = m_toggleComponentOnClick.Count - 1; i >= 0; --i)
+                        for (int i = m_toggleComponentOnVirtualClick.Count - 1; i >= 0; --i)
                         {
-                            if (m_toggleComponentOnClick[i] != null) { m_toggleComponentOnClick[i].enabled = !m_toggleComponentOnClick[i].enabled; }
+                            if (m_toggleComponentOnVirtualClick[i] != null) { m_toggleComponentOnVirtualClick[i].enabled = !m_toggleComponentOnVirtualClick[i].enabled; }
                         }
 
                         // Click event
-                        if (m_onClick != null)
+                        if (m_onVirtualClick != null)
                         {
-                            m_onClick.Invoke(new OutputEventArgs()
+                            m_onVirtualClick.Invoke(new OutputEventArgs()
                             {
                                 senderObj = this,
                                 eventType = ButtonEventType.Click,
@@ -291,31 +292,31 @@ namespace HTC.UnityPlugin.Vive
             }
         }
 
-        public bool GetPress()
+        public bool GetVirtualPress()
         {
             UpdateState();
             return isPress;
         }
 
-        public bool GetPressDown()
+        public bool GetVirtualPressDown()
         {
             UpdateState();
             return isDown;
         }
 
-        public bool GetPressUp()
+        public bool GetVirtualPressUp()
         {
             UpdateState();
             return isUp;
         }
 
-        public int GetClickCount()
+        public int GetVirtualClickCount()
         {
             UpdateState();
             return m_clickCount;
         }
 
-        public float GetLastPressDownTime()
+        public float GetLastVirtualPressDownTime()
         {
             UpdateState();
             return m_lastPressDownTime;
