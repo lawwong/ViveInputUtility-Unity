@@ -113,7 +113,7 @@ namespace HTC.UnityPlugin.Vive
             if (Application.isPlaying && m_active && !m_updateActivated)
             {
                 // register update event
-                ViveInput.onUpdate.AddListener(OnNewInput);
+                ViveInput.onInputStateUpdated.AddListener(OnInputStateUpdated);
                 m_updateActivated = true;
             }
         }
@@ -160,7 +160,7 @@ namespace HTC.UnityPlugin.Vive
             }
         }
 
-        private void OnNewInput()
+        private void OnInputStateUpdated()
         {
             var timeNow = Time.time;
 
@@ -245,7 +245,7 @@ namespace HTC.UnityPlugin.Vive
             else
             {
                 // unregister update event
-                ViveInput.onUpdate.RemoveListener(OnNewInput);
+                ViveInput.onInputStateUpdated.RemoveListener(OnInputStateUpdated);
                 m_updateActivated = false;
 
                 // clean up
