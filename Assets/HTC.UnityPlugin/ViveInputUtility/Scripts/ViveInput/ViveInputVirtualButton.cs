@@ -37,7 +37,7 @@ namespace HTC.UnityPlugin.Vive
         [SerializeField]
         private bool m_active = true;
         [SerializeField]
-        private InputsOperatorEnum m_inputsOperator = InputsOperatorEnum.Or;
+        private InputsOperatorEnum m_combineInputsOperator = InputsOperatorEnum.Or;
         [SerializeField]
         private List<InputEntry> m_inputs = new List<InputEntry>();
         [SerializeField]
@@ -73,7 +73,7 @@ namespace HTC.UnityPlugin.Vive
             }
         }
 
-        public InputsOperatorEnum logicGate { get { return m_inputsOperator; } }
+        public InputsOperatorEnum combineInputsOperator { get { return m_combineInputsOperator; } }
         public List<InputEntry> inputs { get { return m_inputs; } }
         public List<GameObject> toggleGameObjectOnVirtualClick { get { return m_toggleGameObjectOnVirtualClick; } }
         public List<Behaviour> toggleComponentOnVirtualClick { get { return m_toggleComponentOnVirtualClick; } }
@@ -127,7 +127,7 @@ namespace HTC.UnityPlugin.Vive
 
             if (m_inputs.Count == 0) { return; }
 
-            switch (m_inputsOperator)
+            switch (m_combineInputsOperator)
             {
                 case InputsOperatorEnum.Or:
 

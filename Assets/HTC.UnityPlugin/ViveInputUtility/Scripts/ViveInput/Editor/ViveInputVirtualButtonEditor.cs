@@ -39,7 +39,7 @@ namespace HTC.UnityPlugin.Vive
         {
             m_scriptProp = serializedObject.FindProperty("m_Script");
             m_activateProp = serializedObject.FindProperty("m_active");
-            m_logicGateProp = serializedObject.FindProperty("m_inputsOperator");
+            m_logicGateProp = serializedObject.FindProperty("m_combineInputsOperator");
             m_inputsProp = serializedObject.FindProperty("m_inputs");
             m_onPressProp = serializedObject.FindProperty("m_onVirtualPress");
             m_onDownProp = serializedObject.FindProperty("m_onVirtualClick");
