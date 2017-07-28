@@ -53,9 +53,10 @@ public class ViveRoleBindingsHelper : MonoBehaviour
                 if (roleMap.IsRoleValueBound(rv)) { continue; }
 
                 var mappedDevice = roleMap.GetMappedDeviceByRoleValue(rv);
-                if (ViveRole.GetDeviceClass(mappedDevice) != deviceClass) { continue; }
+                var mappedDeviceState = VRModule.GetCurrentDeviceState(mappedDevice);
+                if (mappedDeviceState.deviceClass != deviceClass) { continue; }
 
-                roleMap.BindRoleValue(rv, ViveRole.GetSerialNumber(mappedDevice));
+                roleMap.BindDeviceToRoleValue(mappedDeviceState.serialNumber, rv);
             }
         }
     }
@@ -155,7 +156,7 @@ public class ViveRoleBindingsHelper : MonoBehaviour
                 if (roleMap.IsRoleValueBound(binding.rv)) { continue; }
                 if (roleMap.IsDeviceBound(binding.sn)) { continue; }
 
-                roleMap.BindRoleValue(binding.rv, binding.sn);
+                roleMap.BindDeviceToRoleValue(binding.sn, binding.rv);
             }
         }
     }

@@ -1,6 +1,9 @@
 ﻿//========= Copyright 2016-2017, HTC Corporation. All rights reserved. ===========
 
+using HTC.UnityPlugin.PoseTracker;
 using HTC.UnityPlugin.Utility;
+using System.Collections.Generic;
+using UnityEngine;
 
 namespace HTC.UnityPlugin.VRModuleManagement
 {
@@ -32,8 +35,9 @@ namespace HTC.UnityPlugin.VRModuleManagement
 
     public partial class VRModule : SingletonBehaviour<VRModule>
     {
-        public const uint MAX_DEVICE_COUNT = 16;
-        public const uint INVALID_DEVICE_INDEX = 4294967295;
+        public const uint MAX_DEVICE_COUNT = 16u;
+        public const uint INVALID_DEVICE_INDEX = 4294967295u;
+        public const uint HMD_DEVICE_INDEX = 0u;
 
         public static bool lockPhysicsUpdateRateToRenderFrequency
         {
@@ -89,6 +93,23 @@ namespace HTC.UnityPlugin.VRModuleManagement
         public static bool HasInputFocus()
         {
             return Instance == null || Instance.m_activatedModuleBase == null ? true : Instance.m_activatedModuleBase.HasInputFocus();
+        }
+
+        public static bool IsDeviceConnected(string deviceSerialNumber)
+        {
+            return s_deviceSerialNumberTable.ContainsKey(deviceSerialNumber);
+        }
+
+        public static uint GetConnectedDeviceIndex(string deviceSerialNumber)
+        {
+            uint deviceIndex;
+            if (s_deviceSerialNumberTable.TryGetValue(deviceSerialNumber, out deviceIndex)) { return deviceIndex; }
+            return INVALID_DEVICE_INDEX;
+        }
+
+        public static bool TryGetConnectedDeviceIndex(string deviceSerialNumber, out uint deviceIndex)
+        {
+            return s_deviceSerialNumberTable.TryGetValue(deviceSerialNumber, out deviceIndex);
         }
 
         public static IVRModuleDeviceState GetCurrentDeviceState(uint deviceIndex)

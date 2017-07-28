@@ -64,7 +64,7 @@ public class RenderModelHook : BasePoseTracker, INewPoseListener, IViveRoleCompo
     [SerializeField]
     private Shader m_shader = null;
 
-    private uint m_currentDeviceIndex = ViveRole.INVALID_DEVICE_INDEX;
+    private uint m_currentDeviceIndex = VRModule.INVALID_DEVICE_INDEX;
     private SupportedVRModule m_currentActiveModule;
     private VRModuleDeviceModel m_currentLoadedStaticModel;
     private OverrideModelEnum m_currentOverrideModel;
@@ -125,10 +125,10 @@ public class RenderModelHook : BasePoseTracker, INewPoseListener, IViveRoleCompo
                 break;
             case Mode.Disable:
             default:
-                return ViveRole.INVALID_DEVICE_INDEX;
+                return VRModule.INVALID_DEVICE_INDEX;
         }
 
-        return VivePose.IsValid(result) ? result : ViveRole.INVALID_DEVICE_INDEX;
+        return VivePose.IsValid(result) ? result : VRModule.INVALID_DEVICE_INDEX;
     }
 
     private void UpdateModel(SupportedVRModule module) { UpdateModel(); }
@@ -142,7 +142,7 @@ public class RenderModelHook : BasePoseTracker, INewPoseListener, IViveRoleCompo
         {
             if (m_modelObj != null)
             {
-                m_currentDeviceIndex = ViveRole.INVALID_DEVICE_INDEX;
+                m_currentDeviceIndex = VRModule.INVALID_DEVICE_INDEX;
                 DestroyImmediate(m_modelObj);
                 m_modelObj = null;
             }
@@ -204,7 +204,7 @@ public class RenderModelHook : BasePoseTracker, INewPoseListener, IViveRoleCompo
 
         if (ChangeProp.Set(ref m_currentDeviceIndex, GetCurrentDeviceIndex()))
         {
-            if (ViveRole.IsValidIndex(m_currentDeviceIndex))
+            if (VRModule.IsValidDeviceIndex(m_currentDeviceIndex))
             {
                 m_modelObj.SetActive(true);
                 m_renderModel.SetDeviceIndex((int)m_currentDeviceIndex);
@@ -221,7 +221,7 @@ public class RenderModelHook : BasePoseTracker, INewPoseListener, IViveRoleCompo
     {
         if (ChangeProp.Set(ref m_currentDeviceIndex, GetCurrentDeviceIndex()))
         {
-            if (ViveRole.IsValidIndex(m_currentDeviceIndex))
+            if (VRModule.IsValidDeviceIndex(m_currentDeviceIndex))
             {
                 if (ChangeProp.Set(ref m_currentLoadedStaticModel, VRModule.GetCurrentDeviceState(m_currentDeviceIndex).deviceModel) || m_modelObj == null)
                 {

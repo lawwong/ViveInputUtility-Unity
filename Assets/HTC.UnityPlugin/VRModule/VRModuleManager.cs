@@ -1,15 +1,16 @@
 ﻿//========= Copyright 2016-2017, HTC Corporation. All rights reserved. ===========
 
 using HTC.UnityPlugin.Utility;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace HTC.UnityPlugin.VRModuleManagement
 {
     public partial class VRModule : SingletonBehaviour<VRModule>
     {
-
-        private static DeviceState s_defaultState;
+        private static readonly DeviceState s_defaultState;
         private static readonly ModuleBase[] s_modules;
+        private static readonly Dictionary<string, uint> s_deviceSerialNumberTable = new Dictionary<string, uint>((int)MAX_DEVICE_COUNT);
 
         [SerializeField]
         private bool m_dontDestroyOnLoad = true;
@@ -189,6 +190,22 @@ namespace HTC.UnityPlugin.VRModuleManagement
             {
                 if (m_prevStates[i].isConnected != m_currStates[i].isConnected)
                 {
+                    if (m_currStates[i].isConnected)
+                    {
+                        try
+                        {
+                            s_deviceSerialNumberTable.Add(m_currStates[i].serialNumber, i);
+                        }
+                        catch (System.Exception e)
+                        {
+                            Debug.LogError(e.ToString());
+                        }
+                    }
+                    else
+                    {
+                        s_deviceSerialNumberTable.Remove(m_prevStates[i].serialNumber);
+                    }
+
                     VRModule.InvokeDeviceConnectedEvent(i, m_currStates[i].isConnected);
                 }
             }
