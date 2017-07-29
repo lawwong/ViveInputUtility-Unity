@@ -274,7 +274,11 @@ namespace HTC.UnityPlugin.Vive
 
                 m_role2index[roleOffset] = deviceIndex;
                 m_index2role[deviceIndex] = roleValue;
-                m_index2role[previousDeviceIndex] = m_info.InvalidRoleValue;
+
+                if (VRModule.IsValidDeviceIndex(previousDeviceIndex))
+                {
+                    m_index2role[previousDeviceIndex] = m_info.InvalidRoleValue;
+                }
 
                 m_mappingChangedlisteners.Invoke(eventArg);
             }

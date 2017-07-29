@@ -151,10 +151,7 @@ public class MappingItemUIController : MonoBehaviour, IPointerEnterHandler
 
         if (value)
         {
-            if (m_map.UnbindRoleValue(m_roleValue) && m_map.UnbindDevice(m_mappedDeviceSN))
-            {
-                m_map.BindDeviceToRoleValue(m_mappedDeviceSN, m_roleValue);
-            }
+            m_map.BindDeviceToRoleValue(m_mappedDeviceSN, m_roleValue);
         }
         else
         {
@@ -164,10 +161,7 @@ public class MappingItemUIController : MonoBehaviour, IPointerEnterHandler
 
     public void OnButtonBind()
     {
-        if (m_map.UnbindRoleValue(m_roleValue) && m_map.UnbindDevice(m_selectedDeviceSN))
-        {
-            m_map.BindDeviceToRoleValue(m_mappedDeviceSN, m_roleValue);
-        }
+        m_map.BindDeviceToRoleValue(m_selectedDeviceSN, m_roleValue);
     }
 
     public void OnPointerEnter(PointerEventData eventData)
