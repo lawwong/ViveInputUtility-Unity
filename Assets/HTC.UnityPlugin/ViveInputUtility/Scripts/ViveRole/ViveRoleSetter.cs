@@ -1,6 +1,5 @@
 ﻿//========= Copyright 2016-2017, HTC Corporation. All rights reserved. ===========
 
-using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -14,13 +13,12 @@ namespace HTC.UnityPlugin.Vive
     /// <summary>
     /// This component sync its role to all child component that is an IViveRoleComponent
     /// </summary>
-    [ExecuteInEditMode]
     public class ViveRoleSetter : MonoBehaviour
     {
         private static List<IViveRoleComponent> s_comps = new List<IViveRoleComponent>();
 
         [SerializeField]
-        private ViveRoleProperty m_viveRole = ViveRoleProperty.New();
+        private ViveRoleProperty m_viveRole = ViveRoleProperty.New(HandRole.RightHand);
 
         public ViveRoleProperty viveRole { get { return m_viveRole; } }
 #if UNITY_EDITOR
@@ -41,7 +39,7 @@ namespace HTC.UnityPlugin.Vive
 #endif
         private void Awake()
         {
-            m_viveRole.Changed += UpdateChildrenViveRole;
+            m_viveRole.onRoleChanged += UpdateChildrenViveRole;
         }
 
         public void UpdateChildrenViveRole()
@@ -52,6 +50,11 @@ namespace HTC.UnityPlugin.Vive
                 s_comps[i].viveRole.Set(m_viveRole);
             }
             s_comps.Clear();
+        }
+
+        private void OnDestroy()
+        {
+            m_viveRole.onRoleChanged -= UpdateChildrenViveRole;
         }
     }
 }

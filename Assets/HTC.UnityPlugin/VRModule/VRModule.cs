@@ -13,7 +13,7 @@ namespace HTC.UnityPlugin.VRModuleManagement
         RoomScale,
     }
 
-    public enum SelectVRModuleEnum
+    public enum VRModuleSelectEnum
     {
         Auto = -1,
         None = 0,
@@ -23,14 +23,14 @@ namespace HTC.UnityPlugin.VRModuleManagement
         OculusVR = 4,
     }
 
-    public enum SupportedVRModule
+    public enum VRModuleActiveEnum
     {
         Uninitialized = -1,
-        None = SelectVRModuleEnum.None,
+        None = VRModuleSelectEnum.None,
         //Simulator = SelectVRModuleEnum.Simulator,
-        UnityNativeVR = SelectVRModuleEnum.UnityNativeVR,
-        SteamVR = SelectVRModuleEnum.SteamVR,
-        OculusVR = SelectVRModuleEnum.OculusVR,
+        UnityNativeVR = VRModuleSelectEnum.UnityNativeVR,
+        SteamVR = VRModuleSelectEnum.SteamVR,
+        OculusVR = VRModuleSelectEnum.OculusVR,
     }
 
     public partial class VRModule : SingletonBehaviour<VRModule>
@@ -54,11 +54,11 @@ namespace HTC.UnityPlugin.VRModuleManagement
             }
         }
 
-        public static SelectVRModuleEnum selectModule
+        public static VRModuleSelectEnum selectModule
         {
             get
             {
-                return Instance == null ? SelectVRModuleEnum.Auto : Instance.m_selectModule;
+                return Instance == null ? VRModuleSelectEnum.Auto : Instance.m_selectModule;
             }
             set
             {
@@ -69,11 +69,11 @@ namespace HTC.UnityPlugin.VRModuleManagement
             }
         }
 
-        public static SupportedVRModule activeModule
+        public static VRModuleActiveEnum activeModule
         {
             get
             {
-                return Instance == null ? SupportedVRModule.Uninitialized : Instance.m_activatedModule;
+                return Instance == null ? VRModuleActiveEnum.Uninitialized : Instance.m_activatedModule;
             }
         }
 

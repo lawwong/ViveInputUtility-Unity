@@ -103,7 +103,7 @@ namespace HTC.UnityPlugin.Vive
                 }
                 else
                 {
-                    // 2 feet found, deside lef/right foot
+                    // 2 feet found, determine lef/right foot
                     if (m_directionPoint[m_sortedDevices[index]] < m_directionPoint[m_sortedDevices[index - 1]])
                     {
                         MappingRoleIfUnbound(BodyRole.RightFoot, m_sortedDevices[index]);

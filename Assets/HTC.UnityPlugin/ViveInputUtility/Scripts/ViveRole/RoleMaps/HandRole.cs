@@ -62,7 +62,7 @@ namespace HTC.UnityPlugin.Vive
 
     public class HandRoleHandler : ViveRole.MapHandler<HandRole>
     {
-#if VIU_STEAMVR
+#if __VIU_STEAMVR
         private uint[] m_sortedDevices = new uint[VRModule.MAX_DEVICE_COUNT];
 #endif
         private List<uint> m_sortedDeviceList = new List<uint>();
@@ -146,12 +146,13 @@ namespace HTC.UnityPlugin.Vive
             {
                 leftIndex = VRModule.INVALID_DEVICE_INDEX;
             }
-
+            
             // if not both left/right controllers are assigned, find and assign them with left/right most controller
             if (!VRModule.IsValidDeviceIndex(rightIndex) || !VRModule.IsValidDeviceIndex(leftIndex))
             {
                 // find right to left sorted controllers
-#if VIU_STEAMVR
+                // FIXME: GetSortedTrackedDeviceIndicesOfClass doesn't return correct devices count rightafter device connected
+#if __VIU_STEAMVR
                 if (VRModule.activeModule == SupportedVRModule.SteamVR)
                 {
                     var count = 0;
@@ -164,7 +165,7 @@ namespace HTC.UnityPlugin.Vive
                     foreach (var deviceIndex in m_sortedDevices)
                     {
                         if (m_sortedDeviceList.Count >= count) { break; }
-                        if (IsController(deviceIndex) && deviceIndex != rightIndex && deviceIndex != leftIndex)
+                        if (IsController(deviceIndex) && deviceIndex != rightIndex && deviceIndex != leftIndex && !RoleMap.IsDeviceConnectedAndBound(deviceIndex))
                         {
                             m_sortedDeviceList.Add(deviceIndex);
                         }
@@ -175,13 +176,16 @@ namespace HTC.UnityPlugin.Vive
                 {
                     for (uint deviceIndex = 1u; deviceIndex < VRModule.MAX_DEVICE_COUNT; ++deviceIndex)
                     {
-                        if (IsController(deviceIndex) && deviceIndex != rightIndex && deviceIndex != leftIndex)
+                        if (IsController(deviceIndex) && deviceIndex != rightIndex && deviceIndex != leftIndex && !RoleMap.IsDeviceConnectedAndBound(deviceIndex))
                         {
                             m_sortedDeviceList.Add(deviceIndex);
                         }
                     }
 
-                    SortDeviceIndicesByDirection(m_sortedDeviceList, VRModule.GetCurrentDeviceState(VRModule.HMD_DEVICE_INDEX).pose);
+                    if (m_sortedDeviceList.Count > 1)
+                    {
+                        SortDeviceIndicesByDirection(m_sortedDeviceList, VRModule.GetCurrentDeviceState(VRModule.HMD_DEVICE_INDEX).pose);
+                    }
                 }
 
                 if (m_sortedDeviceList.Count > 0 && !VRModule.IsValidDeviceIndex(rightIndex))

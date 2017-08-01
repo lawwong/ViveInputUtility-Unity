@@ -1,8 +1,10 @@
 ﻿//========= Copyright 2016-2017, HTC Corporation. All rights reserved. ===========
 
 using HTC.UnityPlugin.Utility;
+using HTC.UnityPlugin.VRModuleManagement;
 using System;
 using UnityEngine;
+using UnityEngine.Events;
 
 namespace HTC.UnityPlugin.Vive
 {
@@ -12,6 +14,9 @@ namespace HTC.UnityPlugin.Vive
     [Serializable]
     public class ViveRoleProperty : ISerializationCallbackReceiver
     {
+        public delegate void RoleChangedListener();
+        public delegate void DeviceIndexChangedListener(uint deviceIndex);
+
         public static readonly Type DefaultRoleType = typeof(DeviceRole);
         public static readonly int DefaultRoleValue = (int)DeviceRole.Hmd;
 
@@ -22,10 +27,18 @@ namespace HTC.UnityPlugin.Vive
 
         private bool m_isTypeDirty = true;
         private bool m_isValueDirty = true;
+
         private Type m_roleType = DefaultRoleType;
         private int m_roleValue = DefaultRoleValue;
+        private uint m_sentDeviceIndex = VRModule.INVALID_DEVICE_INDEX;
 
-        public event Action Changed;
+        private ViveRole.IMap m_roleMap = null;
+
+        private Action m_onChanged;
+        private RoleChangedListener m_onRoleChanged;
+
+        private bool m_monitoringIndexChanged;
+        private DeviceIndexChangedListener m_onDeviceIndexChanged;
 
         public Type roleType
         {
@@ -58,7 +71,53 @@ namespace HTC.UnityPlugin.Vive
         }
 
         public string roleTypeFullName { get { return m_roleTypeFullName; } }
+
         public string roleValueName { get { return m_roleValueName; } }
+
+        [Obsolete("Use onRoleChanged instead")]
+        public event Action Changed
+        {
+            add { m_onChanged += value; }
+            remove { m_onChanged -= value; }
+        }
+
+        public event RoleChangedListener onRoleChanged
+        {
+            add { m_onRoleChanged += value; }
+            remove { m_onRoleChanged -= value; }
+        }
+
+        public event DeviceIndexChangedListener onDeviceIndexChanged
+        {
+            add
+            {
+                if (Application.isPlaying)
+                {
+                    Update();
+
+                    if (m_roleMap != null && m_onDeviceIndexChanged == null)
+                    {
+                        m_roleMap.OnRoleValueMappingChanged += OnMappingChanged;
+                        m_monitoringIndexChanged = true;
+                    }
+
+                    m_onDeviceIndexChanged += value;
+                }
+            }
+            remove
+            {
+                if (Application.isPlaying)
+                {
+                    m_onDeviceIndexChanged -= value;
+
+                    if (m_roleMap != null && m_onDeviceIndexChanged == null)
+                    {
+                        m_monitoringIndexChanged = false;
+                        m_roleMap.OnRoleValueMappingChanged -= OnMappingChanged;
+                    }
+                }
+            }
+        }
 
         public static ViveRoleProperty New()
         {
@@ -94,43 +153,96 @@ namespace HTC.UnityPlugin.Vive
         public void SetTypeDirty() { m_isTypeDirty = true; }
         public void SetValueDirty() { m_isValueDirty = true; }
 
+        private void OnMappingChanged(ViveRole.IMap map, ViveRole.MappingChangedEventArg args)
+        {
+            if (args.roleValue == m_roleValue)
+            {
+                Update();
+            }
+        }
+
         // update type and value if type string or value string is/are dirty
         private void Update()
         {
-            if (!m_isTypeDirty && !m_isValueDirty) { return; }
+            var roleChanged = false;
+            var indexChanged = false;
 
-            var changed = false;
-
-            if (m_isTypeDirty)
+            if (m_isTypeDirty || m_isValueDirty)
             {
-                m_isTypeDirty = false;
-
-                Type newType;
-                if (string.IsNullOrEmpty(m_roleTypeFullName) || !ViveRoleEnum.ValidViveRoleTable.TryGetValue(m_roleTypeFullName, out newType))
+                if (m_isTypeDirty)
                 {
-                    newType = DefaultRoleType;
+                    m_isTypeDirty = false;
+
+                    Type newType;
+                    if (string.IsNullOrEmpty(m_roleTypeFullName) || !ViveRoleEnum.ValidViveRoleTable.TryGetValue(m_roleTypeFullName, out newType))
+                    {
+                        newType = DefaultRoleType;
+                    }
+
+                    roleChanged = ChangeProp.Set(ref m_roleType, newType);
+
+                    // maintain m_roleMap cache
+                    if (roleChanged || (m_roleMap == null && newType != null))
+                    {
+                        if (m_roleMap != null && m_onDeviceIndexChanged != null)
+                        {
+                            m_monitoringIndexChanged = false;
+                            m_roleMap.OnRoleValueMappingChanged -= OnMappingChanged;
+                        }
+
+                        m_roleMap = ViveRole.GetMap(m_roleType);
+
+                        if (m_roleMap != null && m_onDeviceIndexChanged != null)
+                        {
+                            m_roleMap.OnRoleValueMappingChanged += OnMappingChanged;
+                            m_monitoringIndexChanged = true;
+                        }
+                    }
                 }
 
-                changed = ChangeProp.Set(ref m_roleType, newType);
+                if (m_isValueDirty || roleChanged)
+                {
+                    m_isValueDirty = false;
+
+                    int newValue;
+                    var info = ViveRoleEnum.GetInfo(m_roleType);
+                    if (string.IsNullOrEmpty(m_roleValueName) || !info.TryGetRoleValueByName(m_roleValueName, out newValue))
+                    {
+                        newValue = info.InvalidRoleValue;
+                    }
+
+                    roleChanged |= ChangeProp.Set(ref m_roleValue, newValue);
+                }
             }
 
-            if (m_isValueDirty || changed)
+            if (m_monitoringIndexChanged)
             {
-                m_isValueDirty = false;
-
-                int newValue;
-                var info = ViveRoleEnum.GetInfo(m_roleType);
-                if (string.IsNullOrEmpty(m_roleValueName) || !info.TryGetRoleValueByName(m_roleValueName, out newValue))
+                var currentDeviceIndex = m_roleMap == null ? VRModule.INVALID_DEVICE_INDEX : m_roleMap.GetMappedDeviceByRoleValue(m_roleValue);
+                if (VRModule.IsValidDeviceIndex(m_sentDeviceIndex) || VRModule.IsValidDeviceIndex(currentDeviceIndex))
                 {
-                    newValue = info.InvalidRoleValue;
+                    indexChanged = ChangeProp.Set(ref m_sentDeviceIndex, currentDeviceIndex);
+                }
+            }
+
+            if (roleChanged)
+            {
+                if (m_onChanged != null)
+                {
+                    m_onChanged();
                 }
 
-                changed |= ChangeProp.Set(ref m_roleValue, newValue);
+                if (m_onRoleChanged != null)
+                {
+                    m_onRoleChanged();
+                }
             }
 
-            if (changed && Changed != null)
+            if (indexChanged)
             {
-                Changed.Invoke();
+                if (m_onDeviceIndexChanged != null)
+                {
+                    m_onDeviceIndexChanged(m_sentDeviceIndex);
+                }
             }
         }
 
@@ -167,7 +279,18 @@ namespace HTC.UnityPlugin.Vive
         {
             Update();
 
-            return ViveRole.GetMap(m_roleType).GetMappedDeviceByRoleValue(m_roleValue);
+            if (m_monitoringIndexChanged)
+            {
+                return m_sentDeviceIndex;
+            }
+            else if (m_roleMap != null)
+            {
+                return m_roleMap.GetMappedDeviceByRoleValue(m_roleValue);
+            }
+            else
+            {
+                return VRModule.INVALID_DEVICE_INDEX;
+            }
         }
 
         public TRole ToRole<TRole>()
@@ -196,8 +319,8 @@ namespace HTC.UnityPlugin.Vive
         {
             Update();
 
+            if (m_roleType != typeof(TRole)) { return false; }
             var roleInfo = ViveRoleEnum.GetInfo<TRole>();
-            if (m_roleType != roleInfo.RoleEnumType) { return false; }
 
             return m_roleValue == roleInfo.ToRoleValue(role);
         }

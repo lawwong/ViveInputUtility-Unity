@@ -2,7 +2,7 @@
 
 using HTC.UnityPlugin.VRModuleManagement;
 using System;
-using System.Collections.Generic;
+using UnityEngine;
 
 namespace HTC.UnityPlugin.Vive
 {
@@ -22,8 +22,14 @@ namespace HTC.UnityPlugin.Vive
         public readonly static TrackerRoleHandler DefaultTrackerRoleHandler = new TrackerRoleHandler();
         public readonly static BodyRoleHandler DefaultBodyRoleHandler = new BodyRoleHandler();
 
-        static ViveRole()
+        private static bool s_initialized = false;
+
+        [RuntimeInitializeOnLoadMethod]
+        public static void Initialize()
         {
+            if (s_initialized || !Application.isPlaying) { return; }
+            s_initialized = true;
+
             // update the ViveRole system with initial connecting state
             for (uint index = 0; index < VRModule.MAX_DEVICE_COUNT; ++index)
             {
