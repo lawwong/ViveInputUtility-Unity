@@ -65,6 +65,7 @@ namespace HTC.UnityPlugin.Vive
         {
             private readonly ViveRoleEnum.IInfo m_info;
             private IMapHandler m_handler;
+            private bool m_lockInternalMapping;
 
             // mapping table
             private readonly uint[] m_role2index;
@@ -254,12 +255,21 @@ namespace HTC.UnityPlugin.Vive
             // ignore binding state
             private void InternalMapping(int roleValue, uint deviceIndex)
             {
+                if (m_lockInternalMapping) { throw new Exception("Recursive calling InternalMapping"); }
+                m_lockInternalMapping = true;
+
                 var previousRoleValue = m_index2role[deviceIndex];
-                if (roleValue == previousRoleValue) { return; }
+                if (roleValue == previousRoleValue)
+                {
+                    m_lockInternalMapping = false;
+                    return;
+                }
 
                 if (m_info.IsValidRoleValue(previousRoleValue))
                 {
+                    m_lockInternalMapping = false;
                     InternalUnmapping(previousRoleValue, deviceIndex);
+                    m_lockInternalMapping = true;
                 }
 
                 var roleOffset = m_info.RoleValueToRoleOffset(roleValue);
@@ -283,12 +293,17 @@ namespace HTC.UnityPlugin.Vive
                 {
                     m_onRoleValueMappingChanged(this, eventArg);
                 }
+
+                m_lockInternalMapping = false;
             }
 
             // both roleValue and deviceIndex must be valid
             // ignore binding state
             private void InternalUnmapping(int roleValue, uint deviceIndex)
             {
+                if (m_lockInternalMapping) { throw new Exception("Recursive calling InternalMapping"); }
+                m_lockInternalMapping = true;
+
                 var roleOffset = m_info.RoleValueToRoleOffset(roleValue);
                 var eventArg = new MappingChangedEventArg()
                 {
@@ -304,6 +319,8 @@ namespace HTC.UnityPlugin.Vive
                 {
                     m_onRoleValueMappingChanged(this, eventArg);
                 }
+
+                m_lockInternalMapping = false;
             }
 
             // device must be valid and connected and have bound role value
@@ -740,6 +757,7 @@ namespace HTC.UnityPlugin.Vive
 
         public static void AssignMapHandler<TRole>(MapHandler<TRole> mapHandler)
         {
+            Initialize();
             GetInternalMap(typeof(TRole)).Handler = mapHandler;
         }
     }

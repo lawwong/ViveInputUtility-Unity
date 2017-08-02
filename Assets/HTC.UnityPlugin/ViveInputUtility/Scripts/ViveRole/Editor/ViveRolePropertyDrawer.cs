@@ -111,11 +111,11 @@ namespace HTC.UnityPlugin.Vive
             var enumTypeRect = new Rect(position.x, position.y, rectWidth, position.height);
             var enumValueRect = new Rect(position.x + rectWidth + spacing, position.y, rectWidth, position.height);
 
-            var roleTypeProp = property.FindPropertyRelative("m_roleTypeFullName");
-            var roleValueProp = property.FindPropertyRelative("m_roleValueName");
+            var roleTypeNameProp = property.FindPropertyRelative("m_roleTypeFullName");
+            var roleValueNameProp = property.FindPropertyRelative("m_roleValueName");
 
-            var roleTypeName = roleTypeProp.stringValue;
-            var roleValueName = roleValueProp.stringValue;
+            var roleTypeName = roleTypeNameProp.stringValue;
+            var roleValueName = roleValueNameProp.stringValue;
 
             // find current role type / type index
             Type roleType;
@@ -149,25 +149,24 @@ namespace HTC.UnityPlugin.Vive
             {
                 var newRoleType = ViveRoleEnum.ValidViveRoleTable.GetValueByIndex(newRoleTypeIndex);
                 var newRoleTypeInfo = ViveRoleEnum.GetInfo(newRoleType);
-                roleTypeProp.stringValue = ViveRoleEnum.ValidViveRoleTable.GetKeyByIndex(newRoleTypeIndex);
+                roleTypeNameProp.stringValue = ViveRoleEnum.ValidViveRoleTable.GetKeyByIndex(newRoleTypeIndex);
 
-                roleValueProp.stringValue = newRoleTypeInfo.GetNameByElementIndex(newRoleValueIndex);
+                roleValueNameProp.stringValue = newRoleTypeInfo.GetNameByElementIndex(newRoleValueIndex);
             }
 
-            property.serializedObject.ApplyModifiedProperties();
+            if (newRoleTypeIndex != roleTypeIndex || newRoleValueIndex != roleValueIndex)
+            {
+                var target = GetTargetObjectOfProperty(property) as ViveRoleProperty;
+                if (newRoleTypeIndex != roleTypeIndex) { target.SetTypeDirty(); }
+                if (newRoleValueIndex != roleValueIndex) { target.SetValueDirty(); }
+            }
+
+            property.serializedObject.ApplyModifiedProperties(); // will call ViveRoleProperty.OnAfterDeserialize here
 
             // Set indent back to what it was
             EditorGUI.indentLevel = indent;
 
             EditorGUI.EndProperty();
-
-            // update target
-            //if (newRoleTypeIndex != roleTypeIndex || newRoleValueIndex != roleValueIndex)
-            //{
-            //    var target = GetTargetObjectOfProperty(property) as ViveRoleProperty;
-            //    if (newRoleTypeIndex != roleTypeIndex) { target.SetTypeDirty(); }
-            //    if (newRoleValueIndex != roleValueIndex) { target.SetValueDirty(); }
-            //}
         }
     }
 }
