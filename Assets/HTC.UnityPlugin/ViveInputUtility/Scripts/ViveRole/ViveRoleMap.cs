@@ -30,6 +30,7 @@ namespace HTC.UnityPlugin.Vive
             ViveRoleEnum.IInfo RoleValueInfo { get; }
             IMapHandler Handler { get; }
             int BindingCount { get; }
+            IIndexedTableReadOnly<string, int> BindingTable { get; }
 
             bool IsRoleValueMapped(int roleValue);
             bool IsDeviceMapped(uint deviceIndex);
@@ -73,7 +74,7 @@ namespace HTC.UnityPlugin.Vive
 
             // binding table
             private readonly IndexedSet<uint>[] m_roleBoundDevices; // connected devices only
-            private readonly Dictionary<string, int> m_sn2role;
+            private readonly IndexedTable<string, int> m_sn2role;
 
             private UnityAction<IMap, MappingChangedEventArg> m_onRoleValueMappingChanged;
 
@@ -85,7 +86,7 @@ namespace HTC.UnityPlugin.Vive
                 m_index2role = new int[VRModule.MAX_DEVICE_COUNT];
 
                 m_roleBoundDevices = new IndexedSet<uint>[m_info.ValidRoleLength];
-                m_sn2role = new Dictionary<string, int>(Mathf.Min(m_info.ValidRoleLength, (int)VRModule.MAX_DEVICE_COUNT));
+                m_sn2role = new IndexedTable<string, int>(Mathf.Min(m_info.ValidRoleLength, (int)VRModule.MAX_DEVICE_COUNT));
 
                 for (int i = 0; i < m_role2index.Length; ++i)
                 {
@@ -100,6 +101,7 @@ namespace HTC.UnityPlugin.Vive
 
             public ViveRoleEnum.IInfo RoleValueInfo { get { return m_info; } }
             public int BindingCount { get { return m_sn2role.Count; } }
+            public IIndexedTableReadOnly<string, int> BindingTable { get { return m_sn2role.ReadOnly; } }
 
             public IMapHandler Handler
             {
@@ -330,7 +332,7 @@ namespace HTC.UnityPlugin.Vive
             {
                 if (m_info.IsValidRoleValue(boundRoleValue))
                 {
-                    var roleBoundDevices = GetRoleBoundDevices(boundRoleValue);
+                    var roleBoundDevices = InternalGetRoleBoundDevices(boundRoleValue);
 
                     roleBoundDevices.Add(deviceIndex); // if key already added here, means that this device already in role bound devices
 
@@ -345,7 +347,7 @@ namespace HTC.UnityPlugin.Vive
             {
                 if (m_info.IsValidRoleValue(boundRoleValue))
                 {
-                    var roleBoundDevices = GetRoleBoundDevices(boundRoleValue);
+                    var roleBoundDevices = InternalGetRoleBoundDevices(boundRoleValue);
 
                     if (!roleBoundDevices.Remove(deviceIndex))
                     {
@@ -523,7 +525,7 @@ namespace HTC.UnityPlugin.Vive
             {
                 if (!IsRoleValueBound(roleValue)) { return false; }
 
-                var roleBoundDevices = GetRoleBoundDevices(roleValue);
+                var roleBoundDevices = InternalGetRoleBoundDevices(roleValue);
                 var boundDeviceIndex = GetMappedDeviceByRoleValue(roleValue);
 
                 // unbind other bound device first, to avoid redundent mapping changes event
@@ -570,7 +572,7 @@ namespace HTC.UnityPlugin.Vive
             }
 
             // roleValue must be valid
-            private IndexedSet<uint> GetRoleBoundDevices(int roleValue)
+            private IndexedSet<uint> InternalGetRoleBoundDevices(int roleValue)
             {
                 var roleOffset = m_info.RoleValueToRoleOffset(roleValue);
 
@@ -635,6 +637,7 @@ namespace HTC.UnityPlugin.Vive
             public ViveRoleEnum.IInfo<TRole> RoleInfo { get { return m_info; } }
             public IMapHandler Handler { get { return m_map.Handler; } }
             public int BindingCount { get { return m_map.BindingCount; } }
+            public IIndexedTableReadOnly<string, int> BindingTable { get { return m_map.BindingTable; } }
 
             public event UnityAction<IMap, MappingChangedEventArg> OnRoleValueMappingChanged
             {

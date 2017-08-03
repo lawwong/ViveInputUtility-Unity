@@ -9195,7 +9195,7 @@ MonoBehaviour:
   rotOffset: {x: 0, y: 0, z: 0}
   m_viveRole:
     m_roleTypeFullName: HTC.UnityPlugin.Vive.HandRole
-    m_roleValueName: Controller3
+    m_roleValueName: ExternalCamera
   m_origin: {fileID: 0}
   m_configPath: externalcamera.cfg
 --- !u!1 &2092009391
