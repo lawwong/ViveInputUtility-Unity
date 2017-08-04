@@ -35,7 +35,7 @@ namespace HTC.UnityPlugin.Vive
             public RoleData[] roles;
         }
 
-        public const string AUTO_LOAD_CONFIG_PATH = "viu_device_role_binding.cfg";
+        public const string AUTO_LOAD_CONFIG_PATH = "viu_binding.cfg";
 
         private static bool s_isAutoLoaded;
         private static BindingConfig s_bindingConfig;

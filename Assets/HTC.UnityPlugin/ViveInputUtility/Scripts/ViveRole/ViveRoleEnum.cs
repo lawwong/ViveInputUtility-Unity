@@ -53,12 +53,6 @@ namespace HTC.UnityPlugin.Vive
 
         private sealed class Info : IInfo
         {
-            private struct EnumValues
-            {
-                public string name;
-                public int value;
-            }
-
             private readonly EnumUtils.EnumDisplayInfo m_info;
             private readonly bool[] m_roleValid;
 

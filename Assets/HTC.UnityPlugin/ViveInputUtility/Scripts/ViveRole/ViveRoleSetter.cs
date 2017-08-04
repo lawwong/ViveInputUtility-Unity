@@ -22,7 +22,7 @@ namespace HTC.UnityPlugin.Vive
 
         public ViveRoleProperty viveRole { get { return m_viveRole; } }
 #if UNITY_EDITOR
-        private void Reset()
+        protected virtual void Reset()
         {
             // get role from first found component
             var comp = GetComponentInChildren<IViveRoleComponent>();
@@ -32,12 +32,12 @@ namespace HTC.UnityPlugin.Vive
             }
         }
 
-        private void OnValidate()
+        protected virtual void OnValidate()
         {
             UpdateChildrenViveRole();
         }
 #endif
-        private void Awake()
+        protected virtual void Awake()
         {
             m_viveRole.onRoleChanged += UpdateChildrenViveRole;
         }
@@ -52,7 +52,7 @@ namespace HTC.UnityPlugin.Vive
             s_comps.Clear();
         }
 
-        private void OnDestroy()
+        protected virtual void OnDestroy()
         {
             m_viveRole.onRoleChanged -= UpdateChildrenViveRole;
         }
