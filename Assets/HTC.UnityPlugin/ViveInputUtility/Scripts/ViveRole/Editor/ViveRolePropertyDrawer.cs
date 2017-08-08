@@ -113,6 +113,7 @@ namespace HTC.UnityPlugin.Vive
 
             var roleTypeNameProp = property.FindPropertyRelative("m_roleTypeFullName");
             var roleValueNameProp = property.FindPropertyRelative("m_roleValueName");
+            var roleValueIntProp = property.FindPropertyRelative("m_roleValueInt");
 
             var roleTypeName = roleTypeNameProp.stringValue;
             var roleValueName = roleValueNameProp.stringValue;
@@ -160,7 +161,8 @@ namespace HTC.UnityPlugin.Vive
                 if (newRoleValueIndex != roleValueIndex)
                 {
                     roleValueNameProp.stringValue = roleTypeInfo.GetNameByElementIndex(newRoleValueIndex);
-                    Debug.Log("ViveRolePropertyDrawer roleValueNameProp.stringValue=" + roleValueNameProp.stringValue);
+                    roleValueIntProp.intValue = roleTypeInfo.GetRoleValueByElementIndex(newRoleValueIndex);
+
                     target.SetValueDirty();
                 }
             }

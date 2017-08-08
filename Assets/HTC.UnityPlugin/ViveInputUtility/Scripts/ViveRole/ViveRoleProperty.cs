@@ -24,6 +24,8 @@ namespace HTC.UnityPlugin.Vive
         private string m_roleTypeFullName;
         [SerializeField]
         private string m_roleValueName;
+        [SerializeField]
+        private int m_roleValueInt;
 
         private bool m_isTypeDirty = true;
         private bool m_isValueDirty = true;
@@ -61,7 +63,12 @@ namespace HTC.UnityPlugin.Vive
             }
             set
             {
-                m_isValueDirty |= ChangeProp.Set(ref m_roleValueName, ViveRoleEnum.GetInfo(m_roleType).GetNameByRoleValue(value));
+                if (ChangeProp.Set(ref m_roleValueName, m_roleMap.RoleValueInfo.GetNameByRoleValue(value)))
+                {
+                    m_roleValueInt = value;
+                    m_isValueDirty = true;
+                }
+
                 Update();
             }
         }
@@ -126,6 +133,22 @@ namespace HTC.UnityPlugin.Vive
             var prop = new ViveRoleProperty();
             prop.m_roleTypeFullName = typeFullName;
             prop.m_roleValueName = valueName;
+
+            Type roleType;
+            if (ViveRoleEnum.ValidViveRoleTable.TryGetValue(typeFullName, out roleType))
+            {
+                var roleInfo = ViveRoleEnum.GetInfo(roleType);
+                var roleIndex = roleInfo.GetElementIndexByName(valueName);
+                if (roleIndex >= 0)
+                {
+                    prop.m_roleValueInt = roleInfo.GetRoleValueByElementIndex(roleIndex);
+                }
+                else
+                {
+                    prop.m_roleValueInt = roleInfo.InvalidRoleValue;
+                }
+            }
+
             return prop;
         }
 
@@ -200,7 +223,7 @@ namespace HTC.UnityPlugin.Vive
                 var info = m_roleMap.RoleValueInfo;
                 if (string.IsNullOrEmpty(m_roleValueName) || !info.TryGetRoleValueByName(m_roleValueName, out m_roleValue))
                 {
-                    m_roleValue = info.InvalidRoleValue;
+                    m_roleValue = info.IsValidRoleValue(m_roleValueInt) ? m_roleValueInt : info.InvalidRoleValue;
                 }
 
                 roleValueChanged = oldRoleValue != m_roleValue;
