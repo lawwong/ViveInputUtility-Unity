@@ -1,0 +1,474 @@
+fileFormatVersion: 2
+guid: 3a23c65532a98fa409e94bf90a84543e
+timeCreated: 1502373311
+licenseType: Free
+TextureImporter:
+  fileIDToRecycleName:
+    21300000: binding_ui_ViveHMD
+    21300002: binding_ui_OculusHMD
+    21300004: binding_ui_ViveController
+    21300006: binding_ui_ViveTracker
+    21300008: binding_ui_ViveBaseStation
+    21300010: binding_ui_Unknown
+    21300012: binding_ui_ViveController_y
+    21300014: binding_ui_ViveController_x
+    21300016: binding_ui_ViveController_z
+    21300018: binding_ui_check
+    21300020: binding_ui_KnucklesLeft
+    21300022: binding_ui_KnucklesRight
+    21300024: binding_ui_OculusTouchLeft
+    21300026: binding_ui_OculusTouchRight
+    21300028: binding_ui_OculusSensor
+    21300030: binding_ui_warning
+    21300032: binding_ui_cross
+    21300034: binding_ui_HMD_y
+    21300036: binding_ui_HMD_x
+    21300038: binding_ui_HMD_z
+    21300040: binding_ui_ViveTracker_y
+    21300042: binding_ui_ViveTracker_x
+    21300044: binding_ui_ViveTracker_z
+    21300046: binding_ui_edit
+    21300048: binding_ui_minus
+    21300050: binding_ui_Knuckles_z
+    21300052: binding_ui_OculusTouch_z
+    21300054: binding_ui_plus
+    21300056: binding_ui_Knuckles_y
+    21300058: binding_ui_Knuckles_x
+    21300060: binding_ui_OculusTouch_y
+    21300062: binding_ui_OculusTouch_x
+  serializedVersion: 2
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 1
+    linearTexture: 0
+    correctGamma: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+  isReadable: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 0
+  cubemapConvolution: 0
+  cubemapConvolutionSteps: 7
+  cubemapConvolutionExponent: 1.5
+  seamlessCubemap: 0
+  textureFormat: -1
+  maxTextureSize: 2048
+  textureSettings:
+    filterMode: -1
+    aniso: 16
+    mipBias: -1
+    wrapMode: 1
+  nPOTScale: 0
+  lightmap: 0
+  rGBM: 0
+  compressionQuality: 50
+  allowsAlphaSplitting: 0
+  spriteMode: 2
+  spriteExtrude: 1
+  spriteMeshType: 1
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spritePixelsToUnits: 100
+  alphaIsTransparency: 1
+  textureType: 8
+  buildTargetSettings: []
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: binding_ui_ViveHMD
+      rect:
+        serializedVersion: 2
+        x: 2
+        y: 922
+        width: 100
+        height: 100
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+    - serializedVersion: 2
+      name: binding_ui_OculusHMD
+      rect:
+        serializedVersion: 2
+        x: 104
+        y: 922
+        width: 100
+        height: 100
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+    - serializedVersion: 2
+      name: binding_ui_ViveController
+      rect:
+        serializedVersion: 2
+        x: 206
+        y: 922
+        width: 100
+        height: 100
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+    - serializedVersion: 2
+      name: binding_ui_ViveTracker
+      rect:
+        serializedVersion: 2
+        x: 308
+        y: 922
+        width: 100
+        height: 100
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+    - serializedVersion: 2
+      name: binding_ui_ViveBaseStation
+      rect:
+        serializedVersion: 2
+        x: 410
+        y: 922
+        width: 100
+        height: 100
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+    - serializedVersion: 2
+      name: binding_ui_Unknown
+      rect:
+        serializedVersion: 2
+        x: 512
+        y: 922
+        width: 100
+        height: 100
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+    - serializedVersion: 2
+      name: binding_ui_ViveController_y
+      rect:
+        serializedVersion: 2
+        x: 614
+        y: 820
+        width: 100
+        height: 202
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+    - serializedVersion: 2
+      name: binding_ui_ViveController_x
+      rect:
+        serializedVersion: 2
+        x: 716
+        y: 820
+        width: 100
+        height: 202
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+    - serializedVersion: 2
+      name: binding_ui_ViveController_z
+      rect:
+        serializedVersion: 2
+        x: 818
+        y: 820
+        width: 100
+        height: 202
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+    - serializedVersion: 2
+      name: binding_ui_check
+      rect:
+        serializedVersion: 2
+        x: 920
+        y: 922
+        width: 100
+        height: 100
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+    - serializedVersion: 2
+      name: binding_ui_KnucklesLeft
+      rect:
+        serializedVersion: 2
+        x: 2
+        y: 820
+        width: 100
+        height: 100
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+    - serializedVersion: 2
+      name: binding_ui_KnucklesRight
+      rect:
+        serializedVersion: 2
+        x: 104
+        y: 820
+        width: 100
+        height: 100
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+    - serializedVersion: 2
+      name: binding_ui_OculusTouchLeft
+      rect:
+        serializedVersion: 2
+        x: 206
+        y: 820
+        width: 100
+        height: 100
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+    - serializedVersion: 2
+      name: binding_ui_OculusTouchRight
+      rect:
+        serializedVersion: 2
+        x: 308
+        y: 820
+        width: 100
+        height: 100
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+    - serializedVersion: 2
+      name: binding_ui_OculusSensor
+      rect:
+        serializedVersion: 2
+        x: 410
+        y: 820
+        width: 100
+        height: 100
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+    - serializedVersion: 2
+      name: binding_ui_warning
+      rect:
+        serializedVersion: 2
+        x: 512
+        y: 820
+        width: 100
+        height: 100
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+    - serializedVersion: 2
+      name: binding_ui_cross
+      rect:
+        serializedVersion: 2
+        x: 920
+        y: 820
+        width: 100
+        height: 100
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+    - serializedVersion: 2
+      name: binding_ui_HMD_y
+      rect:
+        serializedVersion: 2
+        x: 2
+        y: 616
+        width: 202
+        height: 202
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+    - serializedVersion: 2
+      name: binding_ui_HMD_x
+      rect:
+        serializedVersion: 2
+        x: 206
+        y: 616
+        width: 202
+        height: 202
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+    - serializedVersion: 2
+      name: binding_ui_HMD_z
+      rect:
+        serializedVersion: 2
+        x: 409
+        y: 617
+        width: 202
+        height: 202
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+    - serializedVersion: 2
+      name: binding_ui_ViveTracker_y
+      rect:
+        serializedVersion: 2
+        x: 614
+        y: 718
+        width: 100
+        height: 100
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+    - serializedVersion: 2
+      name: binding_ui_ViveTracker_x
+      rect:
+        serializedVersion: 2
+        x: 716
+        y: 718
+        width: 100
+        height: 100
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+    - serializedVersion: 2
+      name: binding_ui_ViveTracker_z
+      rect:
+        serializedVersion: 2
+        x: 818
+        y: 718
+        width: 100
+        height: 100
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+    - serializedVersion: 2
+      name: binding_ui_edit
+      rect:
+        serializedVersion: 2
+        x: 920
+        y: 718
+        width: 100
+        height: 100
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+    - serializedVersion: 2
+      name: binding_ui_minus
+      rect:
+        serializedVersion: 2
+        x: 920
+        y: 616
+        width: 100
+        height: 100
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+    - serializedVersion: 2
+      name: binding_ui_Knuckles_z
+      rect:
+        serializedVersion: 2
+        x: 206
+        y: 412
+        width: 100
+        height: 202
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+    - serializedVersion: 2
+      name: binding_ui_OculusTouch_z
+      rect:
+        serializedVersion: 2
+        x: 512
+        y: 412
+        width: 100
+        height: 202
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+    - serializedVersion: 2
+      name: binding_ui_plus
+      rect:
+        serializedVersion: 2
+        x: 920
+        y: 514
+        width: 100
+        height: 100
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+    - serializedVersion: 2
+      name: binding_ui_Knuckles_y
+      rect:
+        serializedVersion: 2
+        x: 2
+        y: 412
+        width: 100
+        height: 202
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+    - serializedVersion: 2
+      name: binding_ui_Knuckles_x
+      rect:
+        serializedVersion: 2
+        x: 104
+        y: 412
+        width: 100
+        height: 202
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+    - serializedVersion: 2
+      name: binding_ui_OculusTouch_y
+      rect:
+        serializedVersion: 2
+        x: 308
+        y: 412
+        width: 100
+        height: 202
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+    - serializedVersion: 2
+      name: binding_ui_OculusTouch_x
+      rect:
+        serializedVersion: 2
+        x: 410
+        y: 412
+        width: 100
+        height: 202
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+    outline: []
+  spritePackingTag: 
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
