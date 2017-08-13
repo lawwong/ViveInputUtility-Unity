@@ -30,23 +30,26 @@ namespace HTC.UnityPlugin.Vive
         }
 
         [Serializable]
-        public struct BindingConfig
+        public class BindingConfig
         {
-            public bool apply_bindings_on_load;
-            public string toggle_interface_key_code;
-            public string toggle_interface_modifier;
-            public RoleData[] roles;
+            public bool apply_bindings_on_load = true;
+            public string toggle_interface_key_code = KeyCode.B.ToString();
+            public string toggle_interface_modifier = KeyCode.RightShift.ToString();
+            public string interface_prefab = DEFAULT_INTERFACE_PREFAB;
+            public RoleData[] roles = new RoleData[0];
         }
 
         public const string AUTO_LOAD_CONFIG_PATH = "vive_role_bindings.cfg";
+        public const string DEFAULT_INTERFACE_PREFAB = "VIUBindingInterface";
 
         private static bool s_isAutoLoaded;
-        private static BindingConfig s_bindingConfig = new BindingConfig()
-        {
-            apply_bindings_on_load = true,
-        };
+        private static BindingConfig s_bindingConfig = new BindingConfig();
 
-        public static BindingConfig bindingConfig { get { return s_bindingConfig; } set { s_bindingConfig = value; } }
+        private static KeyCode s_toggleKey;
+        private static KeyCode s_toggleModifier;
+        private static GameObject s_interfaceObj;
+
+        public static BindingConfig bindingConfig { get { return s_bindingConfig; } }
 
         [SerializeField]
         private string m_overrideConfigPath = AUTO_LOAD_CONFIG_PATH;
@@ -74,6 +77,66 @@ namespace HTC.UnityPlugin.Vive
 
                     Debug.Log("ViveRoleBindingsHelper: " + appliedCount + " bindings applied from " + configPath);
                 }
+            }
+            else
+            {
+                UpdateInterfaceKeyMonitor();
+            }
+        }
+
+        private static void UpdateInterfaceKeyMonitor()
+        {
+            Debug.Log("UpdateInterfaceKeyMonitor " + s_bindingConfig.toggle_interface_modifier + " " + s_bindingConfig.toggle_interface_key_code);
+            // Moniter input key to open up the binding interface
+            if (!string.IsNullOrEmpty(s_bindingConfig.toggle_interface_key_code) && Enum.IsDefined(typeof(KeyCode), s_bindingConfig.toggle_interface_key_code))
+            {
+                s_toggleKey = (KeyCode)Enum.Parse(typeof(KeyCode), s_bindingConfig.toggle_interface_key_code);
+
+                if (!string.IsNullOrEmpty(s_bindingConfig.toggle_interface_modifier) && Enum.IsDefined(typeof(KeyCode), s_bindingConfig.toggle_interface_modifier))
+                {
+                    s_toggleModifier = (KeyCode)Enum.Parse(typeof(KeyCode), s_bindingConfig.toggle_interface_modifier);
+                }
+                else
+                {
+                    s_toggleModifier = KeyCode.None;
+                }
+
+                ViveInput.onUpdate -= UpdateInterfaceToggleKey;
+                ViveInput.onUpdate += UpdateInterfaceToggleKey;
+                ViveInput.Initialize();
+            }
+            else
+            {
+                s_toggleKey = KeyCode.None;
+                s_toggleModifier = KeyCode.None;
+
+                ViveInput.onUpdate -= UpdateInterfaceToggleKey;
+            }
+        }
+
+        private static void UpdateInterfaceToggleKey()
+        {
+            if (Input.GetKeyDown(s_toggleKey) && (s_toggleModifier == KeyCode.None || Input.GetKey(s_toggleModifier)))
+            {
+                if (s_interfaceObj == null)
+                {
+                    if (string.IsNullOrEmpty(s_bindingConfig.interface_prefab))
+                    {
+                        s_bindingConfig.interface_prefab = DEFAULT_INTERFACE_PREFAB;
+                    }
+
+                    s_interfaceObj = Resources.Load<GameObject>(s_bindingConfig.interface_prefab);
+
+                    if (s_interfaceObj == null)
+                    {
+                        Debug.LogWarning("Binding interface prefab \"" + s_bindingConfig.interface_prefab + "\" not found");
+                        return;
+                    }
+
+                    s_interfaceObj = Instantiate(s_interfaceObj);
+                }
+
+                s_interfaceObj.SetActive(!s_interfaceObj.activeSelf);
             }
         }
 
@@ -215,6 +278,8 @@ namespace HTC.UnityPlugin.Vive
             using (var inputFile = new StreamReader(configPath))
             {
                 s_bindingConfig = JsonUtility.FromJson<BindingConfig>(inputFile.ReadToEnd());
+
+                UpdateInterfaceKeyMonitor();
             }
         }
 
