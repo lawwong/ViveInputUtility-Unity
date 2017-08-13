@@ -33,6 +33,8 @@ namespace HTC.UnityPlugin.Vive
         public struct BindingConfig
         {
             public bool apply_bindings_on_load;
+            public string toggle_interface_key_code;
+            public string toggle_interface_modifier;
             public RoleData[] roles;
         }
 
@@ -47,19 +49,19 @@ namespace HTC.UnityPlugin.Vive
         public static BindingConfig bindingConfig { get { return s_bindingConfig; } set { s_bindingConfig = value; } }
 
         [SerializeField]
-        private string m_viveRoleBindingsConfigPath = AUTO_LOAD_CONFIG_PATH;
+        private string m_overrideConfigPath = AUTO_LOAD_CONFIG_PATH;
 
         [RuntimeInitializeOnLoadMethod]
-        private static void AutoLoadConfig()
+        public static void AutoLoadConfig()
         {
             if (s_isAutoLoaded) { return; }
             s_isAutoLoaded = true;
 
             var configPath = AUTO_LOAD_CONFIG_PATH;
 
-            if (Active && string.IsNullOrEmpty(Instance.m_viveRoleBindingsConfigPath))
+            if (Active && string.IsNullOrEmpty(Instance.m_overrideConfigPath))
             {
-                configPath = Instance.m_viveRoleBindingsConfigPath;
+                configPath = Instance.m_overrideConfigPath;
             }
 
             if (File.Exists(configPath))
