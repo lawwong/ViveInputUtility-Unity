@@ -6,6 +6,7 @@ using System;
 using System.IO;
 using UnityEngine;
 using UnityEngine.Serialization;
+using System.Collections.Generic;
 
 namespace HTC.UnityPlugin.Vive
 {
@@ -33,8 +34,8 @@ namespace HTC.UnityPlugin.Vive
         public class BindingConfig
         {
             public bool apply_bindings_on_load = true;
-            public string toggle_interface_key_code = KeyCode.B.ToString();
-            public string toggle_interface_modifier = KeyCode.RightShift.ToString();
+            public string toggle_interface_key_code = KeyCode.B.ToString(); // Default key to enable binding interface1
+            public string toggle_interface_modifier = KeyCode.RightShift.ToString(); // Default key modifier to enable binding interface
             public string interface_prefab = DEFAULT_INTERFACE_PREFAB;
             public RoleData[] roles = new RoleData[0];
         }
@@ -48,6 +49,7 @@ namespace HTC.UnityPlugin.Vive
         private static KeyCode s_toggleKey;
         private static KeyCode s_toggleModifier;
         private static GameObject s_interfaceObj;
+        private static Dictionary<string, VRModuleDeviceModel> s_modelHintTable = new Dictionary<string, VRModuleDeviceModel>();
 
         public static BindingConfig bindingConfig { get { return s_bindingConfig; } }
 
@@ -86,7 +88,6 @@ namespace HTC.UnityPlugin.Vive
 
         private static void UpdateInterfaceKeyMonitor()
         {
-            Debug.Log("UpdateInterfaceKeyMonitor " + s_bindingConfig.toggle_interface_modifier + " " + s_bindingConfig.toggle_interface_key_code);
             // Moniter input key to open up the binding interface
             if (!string.IsNullOrEmpty(s_bindingConfig.toggle_interface_key_code) && Enum.IsDefined(typeof(KeyCode), s_bindingConfig.toggle_interface_key_code))
             {
@@ -101,42 +102,24 @@ namespace HTC.UnityPlugin.Vive
                     s_toggleModifier = KeyCode.None;
                 }
 
-                ViveInput.onUpdate -= UpdateInterfaceToggleKey;
-                ViveInput.onUpdate += UpdateInterfaceToggleKey;
-                ViveInput.Initialize();
+                if (!Active)
+                {
+                    Initialize();
+                }
+                else
+                {
+                    Instance.enabled = true;
+                }
             }
             else
             {
                 s_toggleKey = KeyCode.None;
                 s_toggleModifier = KeyCode.None;
 
-                ViveInput.onUpdate -= UpdateInterfaceToggleKey;
-            }
-        }
-
-        private static void UpdateInterfaceToggleKey()
-        {
-            if (Input.GetKeyDown(s_toggleKey) && (s_toggleModifier == KeyCode.None || Input.GetKey(s_toggleModifier)))
-            {
-                if (s_interfaceObj == null)
+                if (Active)
                 {
-                    if (string.IsNullOrEmpty(s_bindingConfig.interface_prefab))
-                    {
-                        s_bindingConfig.interface_prefab = DEFAULT_INTERFACE_PREFAB;
-                    }
-
-                    s_interfaceObj = Resources.Load<GameObject>(s_bindingConfig.interface_prefab);
-
-                    if (s_interfaceObj == null)
-                    {
-                        Debug.LogWarning("Binding interface prefab \"" + s_bindingConfig.interface_prefab + "\" not found");
-                        return;
-                    }
-
-                    s_interfaceObj = Instantiate(s_interfaceObj);
+                    Instance.enabled = false;
                 }
-
-                s_interfaceObj.SetActive(!s_interfaceObj.activeSelf);
             }
         }
 
@@ -145,9 +128,60 @@ namespace HTC.UnityPlugin.Vive
             AutoLoadConfig();
         }
 
+        private void Update()
+        {
+            if (!IsInstance) { return; }
+
+            if (Input.GetKeyDown(s_toggleKey) && (s_toggleModifier == KeyCode.None || Input.GetKey(s_toggleModifier)))
+            {
+                ToggleBindingInterface();
+            }
+        }
+
+        public static VRModuleDeviceModel GetDeviceModelHint(string deviceSN)
+        {
+            var deviceIndex = VRModule.GetConnectedDeviceIndex(deviceSN);
+            if (VRModule.IsValidDeviceIndex(deviceIndex))
+            {
+                return VRModule.GetCurrentDeviceState(deviceIndex).deviceModel;
+            }
+
+            VRModuleDeviceModel deviceModel;
+            if (s_modelHintTable.TryGetValue(deviceSN, out deviceModel))
+            {
+                return deviceModel;
+            }
+
+            return VRModuleDeviceModel.Unknown;
+        }
+
+        public static void ToggleBindingInterface()
+        {
+            if (s_interfaceObj == null)
+            {
+                if (string.IsNullOrEmpty(s_bindingConfig.interface_prefab))
+                {
+                    s_bindingConfig.interface_prefab = DEFAULT_INTERFACE_PREFAB;
+                }
+
+                s_interfaceObj = Resources.Load<GameObject>(s_bindingConfig.interface_prefab);
+
+                if (s_interfaceObj == null)
+                {
+                    Debug.LogWarning("Binding interface prefab \"" + s_bindingConfig.interface_prefab + "\" not found");
+                    return;
+                }
+
+                s_interfaceObj = Instantiate(s_interfaceObj);
+            }
+            else
+            {
+                s_interfaceObj.SetActive(!s_interfaceObj.activeSelf);
+            }
+        }
+
         public static void LoadBindingConfigFromRoleMap(params Type[] roleTypeFilter)
         {
-            var roleCount = ViveRoleEnum.ValidViveRoleTable.Count;
             var roleDataList = ListPool<RoleData>.Get();
             var filterUsed = roleTypeFilter != null && roleTypeFilter.Length > 0;
 
@@ -156,7 +190,7 @@ namespace HTC.UnityPlugin.Vive
                 roleDataList.AddRange(s_bindingConfig.roles);
             }
 
-            for (int i = 0; i < roleCount; ++i)
+            for (int i = 0, imax = ViveRoleEnum.ValidViveRoleTable.Count; i < imax; ++i)
             {
                 var roleType = ViveRoleEnum.ValidViveRoleTable.GetValueByIndex(i);
                 var roleName = ViveRoleEnum.ValidViveRoleTable.GetKeyByIndex(i);
@@ -184,9 +218,19 @@ namespace HTC.UnityPlugin.Vive
                     {
                         var binding = new Binding();
                         binding.device_sn = bindingTable.GetKeyByIndex(j);
-                        binding.device_model = VRModule.GetCurrentDeviceState(VRModule.GetConnectedDeviceIndex(binding.device_sn)).deviceModel; // save the device_model for better recognition of the device
                         binding.role_value = bindingTable.GetValueByIndex(j);
                         binding.role_name = roleMap.RoleValueInfo.GetNameByRoleValue(binding.role_value);
+
+                        // save the device_model for better recognition of the device
+                        if (VRModule.IsDeviceConnected(binding.device_sn))
+                        {
+                            binding.device_model = VRModule.GetCurrentDeviceState(VRModule.GetConnectedDeviceIndex(binding.device_sn)).deviceModel;
+                            s_modelHintTable[binding.device_sn] = binding.device_model;
+                        }
+                        else if (!s_modelHintTable.TryGetValue(binding.device_sn, out binding.device_model))
+                        {
+                            binding.device_model = VRModuleDeviceModel.Unknown;
+                        }
 
                         roleData.bindings[j] = binding;
                     }
@@ -267,20 +311,50 @@ namespace HTC.UnityPlugin.Vive
 
         public static void SaveBindingConfigToFile(string configPath, bool prettyPrint = true)
         {
+            var dir = Path.GetDirectoryName(configPath);
+            if (!string.IsNullOrEmpty(dir) && !Directory.Exists(configPath))
+            {
+                Directory.CreateDirectory(dir);
+            }
+
             using (var outputFile = new StreamWriter(configPath))
             {
                 outputFile.Write(JsonUtility.ToJson(s_bindingConfig, prettyPrint));
+
+                UpdateInterfaceKeyMonitor();
             }
         }
 
-        public static void LoadBindingConfigFromFile(string configPath)
+        public static bool LoadBindingConfigFromFile(string configPath)
         {
+            if (!File.Exists(configPath))
+            {
+                return false;
+            }
+
             using (var inputFile = new StreamReader(configPath))
             {
                 s_bindingConfig = JsonUtility.FromJson<BindingConfig>(inputFile.ReadToEnd());
 
+                foreach (var roleData in s_bindingConfig.roles)
+                {
+                    foreach (var binding in roleData.bindings)
+                    {
+                        if (VRModule.IsDeviceConnected(binding.device_sn))
+                        {
+                            s_modelHintTable[binding.device_sn] = VRModule.GetCurrentDeviceState(VRModule.GetConnectedDeviceIndex(binding.device_sn)).deviceModel;
+                        }
+                        else
+                        {
+                            s_modelHintTable[binding.device_sn] = binding.device_model;
+                        }
+                    }
+                }
+
                 UpdateInterfaceKeyMonitor();
             }
+
+            return true;
         }
 
         public static void BindAllCurrentDeviceClassMappings(VRModuleDeviceClass deviceClass)
