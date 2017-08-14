@@ -3,23 +3,34 @@ using HTC.UnityPlugin.VRModuleManagement;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Events;
 
 public class BindingInterfaceRoleSetPanelController : MonoBehaviour
 {
     public Type DEFAULT_SELECTED_ROLE = typeof(BodyRole);
 
+    [Serializable]
+    public class UnityEventBinding : UnityEvent<ViveRole.IMap, string> { }
+
     [SerializeField]
     private BindingInterfaceRoleSetButtonItem m_roleButtonItem;
     [SerializeField]
     private BindingInterfaceRoleSetBindingItem m_bindingItem;
+    [SerializeField]
+    private UnityEventBinding m_onEditBinding;
+    [SerializeField]
+    private UnityEvent m_onFinishEditBinding;
 
     private int m_maxBindingCount;
     private List<BindingInterfaceRoleSetButtonItem> m_roleButtonList = new List<BindingInterfaceRoleSetButtonItem>();
-    private int m_selectedIndex = -1;
+    private int m_selectedRoleIndex = -1;
+    private int m_editingBindingIndex = -1;
 
     private List<BindingInterfaceRoleSetBindingItem> m_bindingList = new List<BindingInterfaceRoleSetBindingItem>();
 
-    public ViveRole.IMap selectedRoleMap { get { return m_roleButtonList[m_selectedIndex].roleMap; } }
+    public ViveRole.IMap selectedRoleMap { get { return m_roleButtonList[m_selectedRoleIndex].roleMap; } }
+    public string editingDevice { get { return selectedRoleMap.BindingTable.GetKeyByIndex(m_editingBindingIndex); } }
+    public bool isEditing { get { return m_editingBindingIndex >= 0; } }
 
     private void Awake()
     {
@@ -38,6 +49,8 @@ public class BindingInterfaceRoleSetPanelController : MonoBehaviour
             }
         }
     }
+
+    public void Test(ViveRole.IMap roleMap, string deviceSN) { }
 
     private void OnEnable()
     {
@@ -77,21 +90,65 @@ public class BindingInterfaceRoleSetPanelController : MonoBehaviour
             m_roleButtonList[index].isOn = true;
         }
 
-        if (m_selectedIndex == index) { return; }
+        if (m_selectedRoleIndex == index) { return; }
 
-        m_selectedIndex = index;
+        m_selectedRoleIndex = index;
 
         RefreshSelectedRoleBindings();
     }
 
-    public void EditBinding(int index)
+    public void StartEditBinding(int index)
     {
+        if (isEditing)
+        {
+            FinishEditBinding();
+        }
 
+        m_bindingList[index].isEditing = true;
+        m_editingBindingIndex = index;
+
+        if (m_onEditBinding != null)
+        {
+            m_onEditBinding.Invoke(selectedRoleMap, editingDevice);
+        }
+    }
+
+    public void FinishEditBinding()
+    {
+        if (isEditing)
+        {
+            m_bindingList[m_editingBindingIndex].isEditing = false;
+        }
+
+        m_editingBindingIndex = -1;
+
+        if (m_onFinishEditBinding != null)
+        {
+            m_onFinishEditBinding.Invoke();
+        }
     }
 
     public void RemoveBinding(int index)
     {
+        var prevEditingBindingDevice = string.Empty;
+        if (isEditing)
+        {
+            if (m_editingBindingIndex != index)
+            {
+                prevEditingBindingDevice = editingDevice;
+            }
 
+            FinishEditBinding();
+        }
+
+        selectedRoleMap.UnbindDevice(selectedRoleMap.BindingTable.GetKeyByIndex(index));
+
+        RefreshSelectedRoleBindings();
+
+        if (!string.IsNullOrEmpty(prevEditingBindingDevice))
+        {
+            StartEditBinding(selectedRoleMap.BindingTable.IndexOf(prevEditingBindingDevice));
+        }
     }
 
     public void AddBinding()
@@ -146,11 +203,13 @@ public class BindingInterfaceRoleSetPanelController : MonoBehaviour
         if (m_bindingList.Count == 0)
         {
             m_bindingList.Add(m_bindingItem);
+            m_bindingItem.onEditPress += StartEditBinding;
+            m_bindingItem.onRemovePress += RemoveBinding;
             m_bindingItem.index = 0;
         }
 
         var bindingIndex = 0;
-        var roleMap = m_roleButtonList[m_selectedIndex].roleMap;
+        var roleMap = m_roleButtonList[m_selectedRoleIndex].roleMap;
         for (int max = roleMap.BindingCount; bindingIndex < max; ++bindingIndex)
         {
             BindingInterfaceRoleSetBindingItem item;
@@ -163,6 +222,8 @@ public class BindingInterfaceRoleSetPanelController : MonoBehaviour
                 itemObj.transform.SetSiblingIndex(itemObj.transform.parent.childCount - 2);
 
                 m_bindingList.Add(item = itemObj.GetComponent<BindingInterfaceRoleSetBindingItem>());
+                item.onEditPress += StartEditBinding;
+                item.onRemovePress += RemoveBinding;
                 item.index = bindingIndex;
             }
             else

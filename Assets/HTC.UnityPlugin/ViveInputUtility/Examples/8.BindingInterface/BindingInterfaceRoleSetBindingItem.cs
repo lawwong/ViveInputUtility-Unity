@@ -1,10 +1,8 @@
-﻿using UnityEngine;
-using System.Collections;
-using HTC.UnityPlugin.Vive;
-using UnityEngine.UI;
-using System;
+﻿using HTC.UnityPlugin.Vive;
 using HTC.UnityPlugin.VRModuleManagement;
-using System.Collections.Generic;
+using System;
+using UnityEngine;
+using UnityEngine.UI;
 
 public class BindingInterfaceRoleSetBindingItem : MonoBehaviour
 {
@@ -16,10 +14,13 @@ public class BindingInterfaceRoleSetBindingItem : MonoBehaviour
     private Text m_deviceSN;
     [SerializeField]
     private Text m_roleName;
+    [SerializeField]
+    private Button m_editButton;
 
     public int index { get; set; }
-    public event Action<int> onEdit;
-    public event Action<int> onRemove;
+    public bool isEditing { get { return m_editButton.interactable; } set { m_editButton.interactable = !value; } }
+    public event Action<int> onEditPress;
+    public event Action<int> onRemovePress;
 
     public void RefreshDisplayInfo(ViveRole.IMap roleMap)
     {
@@ -62,11 +63,11 @@ public class BindingInterfaceRoleSetBindingItem : MonoBehaviour
 
     public void OnEdit()
     {
-        //if(OnEdit)
+        if (onEditPress != null) { onEditPress(index); }
     }
 
     public void OnRemove()
     {
-
+        if (onRemovePress != null) { onRemovePress(index); }
     }
 }
