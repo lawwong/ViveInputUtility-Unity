@@ -17,16 +17,15 @@ public class BindingInterfaceRoleSetBindingItem : MonoBehaviour
     [SerializeField]
     private Button m_editButton;
 
-    public int index { get; set; }
+    public string deviceSN { get; set; }
     public bool isEditing { get { return m_editButton.interactable; } set { m_editButton.interactable = !value; } }
-    public event Action<int> onEditPress;
-    public event Action<int> onRemovePress;
+    public event Action<string> onEditPress;
+    public event Action<string> onRemovePress;
 
     public void RefreshDisplayInfo(ViveRole.IMap roleMap)
     {
         var roleInfo = roleMap.RoleValueInfo;
-        var deviceSN = roleMap.BindingTable.GetKeyByIndex(index);
-        var roleValue = roleMap.BindingTable.GetValueByIndex(index);
+        var roleValue = roleMap.GetBoundRoleValueByDevice(deviceSN);
         var deviceModel = ViveRoleBindingsHelper.GetDeviceModelHint(deviceSN);
 
         m_deviceSN.text = deviceSN;
@@ -63,11 +62,11 @@ public class BindingInterfaceRoleSetBindingItem : MonoBehaviour
 
     public void OnEdit()
     {
-        if (onEditPress != null) { onEditPress(index); }
+        if (onEditPress != null) { onEditPress(deviceSN); }
     }
 
     public void OnRemove()
     {
-        if (onRemovePress != null) { onRemovePress(index); }
+        if (onRemovePress != null) { onRemovePress(deviceSN); }
     }
 }

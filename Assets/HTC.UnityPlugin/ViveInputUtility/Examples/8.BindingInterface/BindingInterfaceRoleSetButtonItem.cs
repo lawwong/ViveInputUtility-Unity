@@ -14,7 +14,7 @@ public class BindingInterfaceRoleSetButtonItem : MonoBehaviour
 
     public event Action<int> onSelected;
 
-    public bool isOn { get { return m_toggle.isOn; } set { m_toggle.isOn = value; } }
+    //public bool isOn { get { return m_toggle.isOn; } set { m_toggle.isOn = value; } }
     public bool interactable { get { return m_toggle.interactable; } set { m_toggle.interactable = value; } }
     public int index { get; set; }
 
@@ -24,7 +24,7 @@ public class BindingInterfaceRoleSetButtonItem : MonoBehaviour
         set
         {
             m_roleMap = value;
-            
+
             if (m_roleMap.BindingCount > 0)
             {
                 m_textName.text = value.RoleValueInfo.RoleEnumType.Name + "(" + value.BindingCount + ")";
@@ -33,6 +33,15 @@ public class BindingInterfaceRoleSetButtonItem : MonoBehaviour
             {
                 m_textName.text = value.RoleValueInfo.RoleEnumType.Name;
             }
+        }
+    }
+
+    public void SetIsOn()
+    {
+        if (!m_toggle.isOn)
+        {
+            m_toggle.isOn = true;
+            m_toggle.group.NotifyToggleOn(m_toggle);
         }
     }
 

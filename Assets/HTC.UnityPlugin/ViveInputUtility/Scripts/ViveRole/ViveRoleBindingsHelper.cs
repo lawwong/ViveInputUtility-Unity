@@ -53,6 +53,8 @@ namespace HTC.UnityPlugin.Vive
 
         public static BindingConfig bindingConfig { get { return s_bindingConfig; } }
 
+        public static bool isBindingInterfaceEnabled { get { return s_interfaceObj != null && s_interfaceObj.activeSelf; } }
+
         [SerializeField]
         private string m_overrideConfigPath = AUTO_LOAD_CONFIG_PATH;
 
@@ -155,7 +157,7 @@ namespace HTC.UnityPlugin.Vive
             return VRModuleDeviceModel.Unknown;
         }
 
-        public static void ToggleBindingInterface()
+        public static void EnableBindingInterface()
         {
             if (s_interfaceObj == null)
             {
@@ -176,7 +178,27 @@ namespace HTC.UnityPlugin.Vive
             }
             else
             {
-                s_interfaceObj.SetActive(!s_interfaceObj.activeSelf);
+                s_interfaceObj.SetActive(true);
+            }
+        }
+
+        public static void DisableBindingInterface()
+        {
+            if (s_interfaceObj != null)
+            {
+                s_interfaceObj.SetActive(false);
+            }
+        }
+
+        public static void ToggleBindingInterface()
+        {
+            if (!isBindingInterfaceEnabled)
+            {
+                EnableBindingInterface();
+            }
+            else
+            {
+                DisableBindingInterface();
             }
         }
 
@@ -291,8 +313,6 @@ namespace HTC.UnityPlugin.Vive
 
                 foreach (var binding in roleData.bindings)
                 {
-                    if (roleMap.IsDeviceBound(binding.device_sn)) { continue; } // skip if device already bound
-
                     // bind device according to role_name first
                     // if role_name is invalid then role_value is used
                     int roleValue;

@@ -514,7 +514,7 @@ AnimatorState:
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 0}
   m_Name: IdleLeft
-  m_Speed: 100
+  m_Speed: -100
   m_CycleOffset: 0
   m_Transitions:
   - {fileID: 110164712}
@@ -685,10 +685,10 @@ AnimatorStateMachine:
     m_Position: {x: 804, y: 192, z: 0}
   - serializedVersion: 1
     m_State: {fileID: 110229900}
-    m_Position: {x: 372, y: 96, z: 0}
+    m_Position: {x: 372, y: 60, z: 0}
   - serializedVersion: 1
     m_State: {fileID: 110236274}
-    m_Position: {x: 636, y: 96, z: 0}
+    m_Position: {x: 636, y: 60, z: 0}
   m_ChildStateMachines: []
   m_AnyStateTransitions: []
   m_EntryTransitions: []
