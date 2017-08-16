@@ -1,6 +1,6 @@
 fileFormatVersion: 2
 guid: 3a23c65532a98fa409e94bf90a84543e
-timeCreated: 1502818311
+timeCreated: 1502879007
 licenseType: Free
 TextureImporter:
   fileIDToRecycleName:
@@ -47,11 +47,11 @@ TextureImporter:
     21300080: binding_ui_icons_OculusTouchRight
     21300082: binding_ui_icons_OculusSensor
     21300084: binding_ui_project_HMD
-    21300086: binding_ui_project_Knuckles
+    21300086: binding_ui_project_KnucklesRight
     21300088: binding_ui_icons_Unknown
     21300090: binding_ui_icons_check
     21300092: binding_ui_icons_minus
-    21300094: binding_ui_project_OculusTouch
+    21300094: binding_ui_project_OculusTouchRight
     21300096: binding_ui_icons_warn
     21300098: binding_ui_icons_cross
     21300100: binding_ui_icons_plus
@@ -216,7 +216,7 @@ TextureImporter:
       border: {x: 0, y: 0, z: 0, w: 0}
       outline: []
     - serializedVersion: 2
-      name: binding_ui_project_Knuckles
+      name: binding_ui_project_KnucklesRight
       rect:
         serializedVersion: 2
         x: 134
@@ -264,7 +264,7 @@ TextureImporter:
       border: {x: 0, y: 0, z: 0, w: 0}
       outline: []
     - serializedVersion: 2
-      name: binding_ui_project_OculusTouch
+      name: binding_ui_project_OculusTouchRight
       rect:
         serializedVersion: 2
         x: 135

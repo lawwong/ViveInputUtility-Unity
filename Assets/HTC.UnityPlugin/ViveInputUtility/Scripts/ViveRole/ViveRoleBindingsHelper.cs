@@ -34,7 +34,7 @@ namespace HTC.UnityPlugin.Vive
         public class BindingConfig
         {
             public bool apply_bindings_on_load = true;
-            public string toggle_interface_key_code = KeyCode.B.ToString(); // Default key to enable binding interface1
+            public string toggle_interface_key_code = KeyCode.None.ToString(); // Default key to enable binding interface1
             public string toggle_interface_modifier = KeyCode.RightShift.ToString(); // Default key modifier to enable binding interface
             public string interface_prefab = DEFAULT_INTERFACE_PREFAB;
             public RoleData[] roles = new RoleData[0];
