@@ -29,14 +29,22 @@ namespace HTC.UnityPlugin.Vive.BindingInterface
             m_toggleApplyOnStart.isOn = ViveRoleBindingsHelper.bindingConfig.apply_bindings_on_load;
         }
 
+        private void Update()
+        {
+            if (Input.GetKeyDown(KeyCode.Escape))
+            {
+                CloseBindingInterface();
+            }
+        }
+
         public void SetDirty()
         {
             m_dirtySymble.SetActive(true);
         }
 
-        public void ToggleBindingInterface()
+        public void CloseBindingInterface()
         {
-            ViveRoleBindingsHelper.ToggleBindingInterface();
+            ViveRoleBindingsHelper.DisableBindingInterface();
         }
 
         public void ReloadConfig()
