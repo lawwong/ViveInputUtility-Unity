@@ -6,13 +6,13 @@ using HTC.UnityPlugin.VRModuleManagement;
 [RequireComponent(typeof(Image))]
 public class TestTrackingDeviceIcon : MonoBehaviour
 {
-    public VRModuleDeviceModel model;
+    //public VRModuleDeviceModel model;
 
-    private Image m_image;
+    //private Image m_image;
 
     private void Awake()
     {
-        m_image = GetComponent<Image>();
+        //m_image = GetComponent<Image>();
     }
 
     
