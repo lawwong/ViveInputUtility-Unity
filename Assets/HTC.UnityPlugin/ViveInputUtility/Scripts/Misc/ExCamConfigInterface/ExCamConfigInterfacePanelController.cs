@@ -297,7 +297,7 @@ namespace HTC.UnityPlugin.Vive.ExCamConfigInterface
             {
                 excam.config = default(SteamVR_ExternalCamera.Config);
                 excam.ReadConfig();
-                ReloadField();
+                ReloadFields();
             }
         }
 
@@ -370,16 +370,36 @@ namespace HTC.UnityPlugin.Vive.ExCamConfigInterface
             Camera cam;
             if (TryGetTargetExCam(out excam, out cam))
             {
-                var camPose = new Pose(cam.transform, false);
+                Vector3 recenteredPos;
+                Vector3 recenteredRot;
 
-                //if(ExternalCameraHook.Instance.origin != null)
-                //{
-                //    camPose = camPose * new Pose()
-                //}
+                var origin = ExternalCameraHook.Instance.origin;
+                var root = origin != null ? origin : ExternalCameraHook.Instance.transform.parent;
 
-                excam.transform.parent.localPosition = Vector3.zero;
-                excam.transform.parent.localRotation = Quaternion.identity;
+                if (root == null)
+                {
+                    recenteredPos = cam.transform.position;
+                    recenteredRot = root.eulerAngles;
+                }
+                else
+                {
+                    recenteredPos = root.InverseTransformPoint(cam.transform.position);
+                    recenteredRot = (cam.transform.rotation * Quaternion.Inverse(root.rotation)).eulerAngles;
+                }
+
+                posX = recenteredPos.x;
+                posY = recenteredPos.y;
+                posZ = recenteredPos.z;
+                rotX = recenteredRot.x;
+                rotY = recenteredRot.y;
+                rotZ = recenteredRot.z;
+
+                ReloadFields();
+
+                ExternalCameraHook.Instance.Recenter();
             }
+
+            m_recenterButton.gameObject.SetActive(false);
         }
 #else
         public float posX { get; set; }
@@ -409,7 +429,7 @@ namespace HTC.UnityPlugin.Vive.ExCamConfigInterface
         public void RecenterExternalCameraPose() { }
 #endif
 
-        private void OnEnable()
+        private void Awake()
         {
             if (EventSystem.current == null)
             {
@@ -420,13 +440,18 @@ namespace HTC.UnityPlugin.Vive.ExCamConfigInterface
                 EventSystem.current.gameObject.AddComponent<StandaloneInputModule>();
             }
 
-            transform.GetChild(0).gameObject.SetActive(true);
+            transform.GetChild(0).gameObject.SetActive(true); // force update UI layout
 
-            ReloadField();
+            UpdateRecenterButtonVisible();
+        }
+
+        private void OnEnable()
+        {
+            ReloadFields();
 
             if (ExternalCameraHook.Active)
             {
-                ExternalCameraHook.Instance.viveRole.onDeviceIndexChanged += UpdateRecenterButtonVisible;
+                ExternalCameraHook.Instance.viveRole.onDeviceIndexChanged += OnDeviceIndexChanged;
             }
         }
 
@@ -434,11 +459,11 @@ namespace HTC.UnityPlugin.Vive.ExCamConfigInterface
         {
             if (ExternalCameraHook.Active)
             {
-                ExternalCameraHook.Instance.viveRole.onDeviceIndexChanged -= UpdateRecenterButtonVisible;
+                ExternalCameraHook.Instance.viveRole.onDeviceIndexChanged -= OnDeviceIndexChanged;
             }
         }
 
-        private void ReloadField()
+        private void ReloadFields()
         {
             m_posX.fieldValue = posX;
             m_posY.fieldValue = posY;
@@ -461,9 +486,29 @@ namespace HTC.UnityPlugin.Vive.ExCamConfigInterface
             m_diableStandardAssets.isOn = diableStandardAssets;
         }
 
-        private void UpdateRecenterButtonVisible(uint exCamDeviceIndex)
+        private void OnDeviceIndexChanged(uint deviceIndex) { UpdateRecenterButtonVisible(); }
+
+        private void UpdateRecenterButtonVisible()
         {
-            m_recenterButton.gameObject.SetActive(VRModule.IsValidDeviceIndex(exCamDeviceIndex));
+            if (ExternalCameraHook.Instance.isTrackingDevice)
+            {
+                m_recenterButton.gameObject.SetActive(false);
+            }
+            else
+            {
+                bool needRecenter;
+                var origin = ExternalCameraHook.Instance.origin;
+                if (origin == null)
+                {
+                    needRecenter = new Pose(ExternalCameraHook.Instance.transform, false) != Pose.identity;
+                }
+                else
+                {
+                    needRecenter = new Pose(ExternalCameraHook.Instance.transform, false) != new Pose(origin, false);
+                }
+
+                m_recenterButton.gameObject.SetActive(needRecenter);
+            }
         }
     }
 }
