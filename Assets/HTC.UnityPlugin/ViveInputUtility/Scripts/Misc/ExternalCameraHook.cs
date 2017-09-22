@@ -250,7 +250,6 @@ public class ExternalCameraHook : SingletonBehaviour<ExternalCameraHook>, INewPo
 
     private void OnDeviceIndexChanged(uint deviceIndex)
     {
-        Debug.Log(name + "OnDeviceIndexChanged deviceIndex=" + deviceIndex);
         m_quadViewSwitch = isTrackingDevice;
 
         UpdateActivity();
@@ -272,7 +271,6 @@ public class ExternalCameraHook : SingletonBehaviour<ExternalCameraHook>, INewPo
 
     private void InternalSetQuadViewActive(bool value)
     {
-        Debug.Log(name + "InternalSetQuadViewActive " + value);
         if (value && m_externalCamera == null && !string.IsNullOrEmpty(m_configPath) && File.Exists(m_configPath))
         {
             // don't know why SteamVR_ExternalCamera must be instantiated from the prefab
@@ -306,7 +304,6 @@ public class ExternalCameraHook : SingletonBehaviour<ExternalCameraHook>, INewPo
 
     private void InternalSetConfigInterfaceActive(bool value)
     {
-        Debug.Log(name + "InternalSetConfigInterfaceActive " + value);
         if (value && m_configUI == null)
         {
             var prefab = Resources.Load<GameObject>("VIUExCamConfigInterface");
