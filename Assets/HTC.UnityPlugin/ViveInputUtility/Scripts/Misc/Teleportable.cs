@@ -1,12 +1,16 @@
 ﻿//========= Copyright 2016-2017, HTC Corporation. All rights reserved. ===========
 
+#if VIU_PLUGIN
 using HTC.UnityPlugin.Vive;
+#endif
 using System.Collections;
 using UnityEngine;
 using UnityEngine.EventSystems;
+using System;
 
 public class Teleportable : MonoBehaviour
-    , IPointerExitHandler
+    , IPointerUpHandler
+    , IPointerDownHandler
 {
     public enum TeleportButton
     {
@@ -23,24 +27,6 @@ public class Teleportable : MonoBehaviour
 
     private Coroutine teleportCoroutine;
 
-    public ControllerButton teleportViveButton
-    {
-        get
-        {
-            switch (teleportButton)
-            {
-                case TeleportButton.Pad:
-                    return ControllerButton.Pad;
-
-                case TeleportButton.Grip:
-                    return ControllerButton.Grip;
-
-                case TeleportButton.Trigger:
-                default:
-                    return ControllerButton.Trigger;
-            }
-        }
-    }
 #if UNITY_EDITOR
     private void Reset()
     {
@@ -61,20 +47,43 @@ public class Teleportable : MonoBehaviour
         }
     }
 
-    public void OnPointerExit(PointerEventData eventData)
+    public void OnPointerDown(PointerEventData eventData)
     {
+    }
+
+    public void OnPointerUp(PointerEventData eventData)
+    {
+        Debug.Log("OnPointerUp");
         // skip if it was teleporting
         if (teleportCoroutine != null) { return; }
 
-        // don't teleport if it was not releasing the button
-        if (eventData.eligibleForClick) { return; }
-
+        // check if is teleport button
+#if  VIU_PLUGIN
         VivePointerEventData viveEventData;
-        if (!eventData.TryGetViveButtonEventData(out viveEventData)) { return; }
+        if (eventData.TryGetViveButtonEventData(out viveEventData))
+        {
+            switch (teleportButton)
+            {
+                case TeleportButton.Trigger: if (viveEventData.viveButton != ControllerButton.Trigger) { return; } break;
+                case TeleportButton.Pad: if (viveEventData.viveButton != ControllerButton.Pad) { return; } break;
+                case TeleportButton.Grip: if (viveEventData.viveButton != ControllerButton.Grip) { return; } break;
+            }
+        }
+        else
+#endif
+        if (eventData.button != (PointerEventData.InputButton)teleportButton)
+        {
+            switch (teleportButton)
+            {
+                case TeleportButton.Trigger: if (eventData.button != PointerEventData.InputButton.Left) { return; } break;
+                case TeleportButton.Pad: if (eventData.button != PointerEventData.InputButton.Right) { return; } break;
+                case TeleportButton.Grip: if (eventData.button != PointerEventData.InputButton.Middle) { return; } break;
+            }
+        }
 
-        if (viveEventData.viveButton != teleportViveButton) { return; }
-
+        // check if hit something
         var hitResult = eventData.pointerCurrentRaycast;
+        Debug.Log("hitResult.isValid=" + hitResult.isValid);
         if (!hitResult.isValid) { return; }
 
         if (target == null || pivot == null)
@@ -87,6 +96,7 @@ public class Teleportable : MonoBehaviour
 
         teleportCoroutine = StartCoroutine(StartTeleport(targetPos, fadeDuration));
     }
+
 #if VIU_STEAMVR
     private bool m_steamVRFadeInitialized;
 
@@ -127,6 +137,7 @@ public class Teleportable : MonoBehaviour
 
         teleportCoroutine = null;
     }
+
 #else
     public IEnumerator StartTeleport(Vector3 position, float duration)
     {

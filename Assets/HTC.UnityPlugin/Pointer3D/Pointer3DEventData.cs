@@ -65,6 +65,7 @@ namespace HTC.UnityPlugin.Pointer3D
         public Quaternion pressRotation;
 
         public float pressDistance;
+        public PointerEventData.FramePressState pressState;
 
         public Pointer3DEventData(Pointer3DRaycaster ownerRaycaster, EventSystem eventSystem) : base(eventSystem)
         {
@@ -73,9 +74,9 @@ namespace HTC.UnityPlugin.Pointer3D
         }
 
         public virtual bool GetPress() { return false; }
-
+        
         public virtual bool GetPressDown() { return false; }
-
+        
         public virtual bool GetPressUp() { return false; }
     }
 }

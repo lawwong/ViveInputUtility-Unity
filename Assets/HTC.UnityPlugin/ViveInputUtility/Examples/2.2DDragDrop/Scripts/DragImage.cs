@@ -11,6 +11,9 @@ public class DragImage : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDra
     private Dictionary<int, GameObject> m_DraggingIcons = new Dictionary<int, GameObject>();
     private Dictionary<int, RectTransform> m_DraggingPlanes = new Dictionary<int, RectTransform>();
 
+    public int draggingId;
+    public RectTransform draggingPlan;
+
     public void OnBeginDrag(PointerEventData eventData)
     {
         var canvas = FindInParents<Canvas>(gameObject);
@@ -50,8 +53,10 @@ public class DragImage : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDra
     private void SetDraggedPosition(PointerEventData eventData)
     {
         if (dragOnSurfaces && eventData.pointerEnter != null && eventData.pointerEnter.transform as RectTransform != null)
-            m_DraggingPlanes[eventData.pointerId] = eventData.pointerEnter.transform as RectTransform;
-
+        {
+            draggingId = eventData.pointerId;
+            draggingPlan = m_DraggingPlanes[eventData.pointerId] = eventData.pointerEnter.transform as RectTransform;
+        }
         var rt = m_DraggingIcons[eventData.pointerId].GetComponent<RectTransform>();
         Vector3 globalMousePos;
         if (RectTransformUtility.ScreenPointToWorldPointInRectangle(m_DraggingPlanes[eventData.pointerId], eventData.position, eventData.pressEventCamera, out globalMousePos))

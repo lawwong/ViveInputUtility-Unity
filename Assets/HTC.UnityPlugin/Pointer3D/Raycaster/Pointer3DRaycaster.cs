@@ -22,7 +22,6 @@ namespace HTC.UnityPlugin.Pointer3D
     {
         public const float MIN_SEGMENT_DISTANCE = 0.01f;
 
-        private Pointer3DEventData hoverEventData;
         private ReadOnlyCollection<Pointer3DEventData> buttonEventDataListReadOnly;
         private ReadOnlyCollection<RaycastResult> sortedRaycastResultsReadOnly;
         private ReadOnlyCollection<Vector3> breakPointsReadOnly;
@@ -36,10 +35,8 @@ namespace HTC.UnityPlugin.Pointer3D
 
         public bool showDebugRay = true;
 
-        public Pointer3DEventData HoverEventData
-        {
-            get { return hoverEventData ?? (hoverEventData = new Pointer3DEventData(this, EventSystem.current)); }
-        }
+        [Obsolete("Use ButtonEventDataList[0] instead.")]
+        public Pointer3DEventData HoverEventData { get { return buttonEventDataList.Count > 0 ? buttonEventDataList[0] : null; } }
 
         public ReadOnlyCollection<Pointer3DEventData> ButtonEventDataList
         {
