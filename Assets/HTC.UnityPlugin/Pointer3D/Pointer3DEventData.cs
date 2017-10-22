@@ -65,7 +65,7 @@ namespace HTC.UnityPlugin.Pointer3D
         public Quaternion pressRotation;
 
         public float pressDistance;
-        public PointerEventData.FramePressState pressState;
+        public GameObject pressEnter;
 
         public Pointer3DEventData(Pointer3DRaycaster ownerRaycaster, EventSystem eventSystem) : base(eventSystem)
         {

@@ -1,16 +1,13 @@
 ﻿//========= Copyright 2016-2017, HTC Corporation. All rights reserved. ===========
 
-#if VIU_PLUGIN
+using HTC.UnityPlugin.Pointer3D;
 using HTC.UnityPlugin.Vive;
-#endif
 using System.Collections;
 using UnityEngine;
 using UnityEngine.EventSystems;
-using System;
 
 public class Teleportable : MonoBehaviour
-    , IPointerUpHandler
-    , IPointerDownHandler
+    , IPointer3DPressExitHandler
 {
     public enum TeleportButton
     {
@@ -47,18 +44,15 @@ public class Teleportable : MonoBehaviour
         }
     }
 
-    public void OnPointerDown(PointerEventData eventData)
+    public void OnPointer3DPressExit(Pointer3DEventData eventData)
     {
-    }
-
-    public void OnPointerUp(PointerEventData eventData)
-    {
-        Debug.Log("OnPointerUp");
         // skip if it was teleporting
         if (teleportCoroutine != null) { return; }
 
+        // skip if it was not releasing the button
+        if (eventData.eligibleForClick) { return; }
+
         // check if is teleport button
-#if  VIU_PLUGIN
         VivePointerEventData viveEventData;
         if (eventData.TryGetViveButtonEventData(out viveEventData))
         {
@@ -69,9 +63,7 @@ public class Teleportable : MonoBehaviour
                 case TeleportButton.Grip: if (viveEventData.viveButton != ControllerButton.Grip) { return; } break;
             }
         }
-        else
-#endif
-        if (eventData.button != (PointerEventData.InputButton)teleportButton)
+        else if (eventData.button != (PointerEventData.InputButton)teleportButton)
         {
             switch (teleportButton)
             {
@@ -80,10 +72,10 @@ public class Teleportable : MonoBehaviour
                 case TeleportButton.Grip: if (eventData.button != PointerEventData.InputButton.Middle) { return; } break;
             }
         }
+        
+        var hitResult = eventData.pointerCurrentRaycast;
 
         // check if hit something
-        var hitResult = eventData.pointerCurrentRaycast;
-        Debug.Log("hitResult.isValid=" + hitResult.isValid);
         if (!hitResult.isValid) { return; }
 
         if (target == null || pivot == null)

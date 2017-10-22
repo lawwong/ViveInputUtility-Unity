@@ -234,16 +234,8 @@ namespace HTC.UnityPlugin.Pointer3D
 
                 if (buttonEventData.eligibleForClick)
                 {
-                    if (buttonEventData.pressState == PointerEventData.FramePressState.Pressed)
-                    {
-                        buttonEventData.pressState = PointerEventData.FramePressState.PressedAndReleased;
-                    }
-                    else
-                    {
-                        buttonEventData.pressState = PointerEventData.FramePressState.Released;
-                    }
-
                     ProcessPressUp(buttonEventData);
+                    HandlePressExitAndEnter(buttonEventData, null);
                 }
 
                 if (buttonEventData.pointerEnter != null)
@@ -290,6 +282,8 @@ namespace HTC.UnityPlugin.Pointer3D
             {
                 var raycaster = processingRaycasters[i];
 
+                if (raycaster == null || raycaster.ButtonEventDataList.Count == 0) { continue; }
+
                 raycaster.Raycast();
                 var result = raycaster.FirstRaycastResult();
 
@@ -299,7 +293,7 @@ namespace HTC.UnityPlugin.Pointer3D
                 var raycasterRot = raycaster.transform.rotation;
 
                 // create data for first button event (with hover event)
-                var hoverEventData = raycaster.ButtonEventDataList.Count >= 0 ? raycaster.ButtonEventDataList[0] : null;
+                var hoverEventData = raycaster.ButtonEventDataList[0];
 
                 hoverEventData.Reset();
                 hoverEventData.delta = Vector2.zero;
@@ -323,7 +317,6 @@ namespace HTC.UnityPlugin.Pointer3D
                     buttonEventData.scrollDelta = scrollDelta;
                     buttonEventData.position = ScreenCenterPoint;
                     buttonEventData.pointerCurrentRaycast = result;
-                    buttonEventData.pointerEnter = hoverEventData.pointerEnter;
 
                     buttonEventData.position3DDelta = hoverEventData.position3DDelta;
                     buttonEventData.position3D = hoverEventData.position3D;
@@ -340,6 +333,8 @@ namespace HTC.UnityPlugin.Pointer3D
                 {
                     var buttonEventData = raycaster.ButtonEventDataList[j];
                     if (buttonEventData == null) { continue; }
+
+                    buttonEventData.pointerEnter = hoverEventData.pointerEnter;
 
                     ProcessPress(buttonEventData);
                     ProcessDrag(buttonEventData);
@@ -392,24 +387,20 @@ namespace HTC.UnityPlugin.Pointer3D
             {
                 if (pressedThisFrame)
                 {
-                    eventData.pressState = PointerEventData.FramePressState.Pressed;
                     ProcessPressDown(eventData);
-                }
-                else
-                {
-                    eventData.pressState = PointerEventData.FramePressState.NotChanged;
+                    HandlePressExitAndEnter(eventData, eventData.pointerCurrentRaycast.gameObject);
                 }
             }
             else
             {
-                if (!pressedThisFrame)
+                if (pressedThisFrame)
                 {
-                    eventData.pressState = PointerEventData.FramePressState.Released;
-                    ProcessPressUp(eventData);
+                    HandlePressExitAndEnter(eventData, eventData.pointerCurrentRaycast.gameObject);
                 }
                 else
                 {
-                    eventData.pressState = PointerEventData.FramePressState.NotChanged;
+                    ProcessPressUp(eventData);
+                    HandlePressExitAndEnter(eventData, null);
                 }
             }
         }
@@ -478,8 +469,8 @@ namespace HTC.UnityPlugin.Pointer3D
         protected void ProcessPressUp(Pointer3DEventData eventData)
         {
             var currentOverGo = eventData.pointerCurrentRaycast.gameObject;
-            Debug.Log("eventData.pointerEnter=" + (eventData.pointerEnter == null ? "null" : eventData.pointerEnter.name));
-            ExecuteEvents.ExecuteHierarchy(eventData.pointerEnter, eventData, ExecuteEvents.pointerUpHandler);
+
+            ExecuteEvents.Execute(eventData.pointerEnter, eventData, ExecuteEvents.pointerUpHandler);
 
             // see if we mouse up on the same element that we clicked on...
             var pointerUpHandler = ExecuteEvents.GetEventHandler<IPointerClickHandler>(currentOverGo);
@@ -540,6 +531,35 @@ namespace HTC.UnityPlugin.Pointer3D
                     eventData.rawPointerPress = null;
                 }
                 ExecuteEvents.Execute(eventData.pointerDrag, eventData, ExecuteEvents.dragHandler);
+            }
+        }
+
+        protected static void HandlePressExitAndEnter(Pointer3DEventData eventData, GameObject newEnterTarget)
+        {
+            if (eventData.pressEnter == newEnterTarget) { return; }
+
+            var oldTarget = eventData.pressEnter == null ? null : eventData.pressEnter.transform;
+            var newTarget = newEnterTarget == null ? null : newEnterTarget.transform;
+            var commonRoot = default(Transform);
+
+            for (var t = oldTarget; t != null; t = t.parent)
+            {
+                if (newTarget != null && newTarget.IsChildOf(t))
+                {
+                    commonRoot = t;
+                    break;
+                }
+                else
+                {
+                    ExecuteEvents.Execute(t.gameObject, eventData, ExecutePointer3DEvents.PressExitHandler);
+                }
+            }
+
+            eventData.pressEnter = newEnterTarget;
+
+            for (var t = newTarget; t != commonRoot; t = t.parent)
+            {
+                ExecuteEvents.Execute(t.gameObject, eventData, ExecutePointer3DEvents.PressEnterHandler);
             }
         }
 
