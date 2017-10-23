@@ -50,7 +50,7 @@ public class Teleportable : MonoBehaviour
         if (teleportCoroutine != null) { return; }
 
         // skip if it was not releasing the button
-        if (eventData.eligibleForClick) { return; }
+        if (eventData.GetPress()) { return; }
 
         // check if is teleport button
         VivePointerEventData viveEventData;
@@ -72,7 +72,7 @@ public class Teleportable : MonoBehaviour
                 case TeleportButton.Grip: if (eventData.button != PointerEventData.InputButton.Middle) { return; } break;
             }
         }
-        
+
         var hitResult = eventData.pointerCurrentRaycast;
 
         // check if hit something
