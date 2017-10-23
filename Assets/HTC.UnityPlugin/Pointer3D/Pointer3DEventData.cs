@@ -74,9 +74,21 @@ namespace HTC.UnityPlugin.Pointer3D
         }
 
         public virtual bool GetPress() { return false; }
-        
+
         public virtual bool GetPressDown() { return false; }
-        
+
         public virtual bool GetPressUp() { return false; }
+
+        public override string ToString()
+        {
+            var str = string.Empty;
+            str += "eligibleForClick: " + eligibleForClick + "\n";
+            str += "pointerEnter: " + Pointer3DInputModule.PrintGOPath(pointerEnter) + "\n";
+            str += "pointerPress: " + Pointer3DInputModule.PrintGOPath(pointerPress) + "\n";
+            str += "lastPointerPress: " + Pointer3DInputModule.PrintGOPath(lastPress) + "\n";
+            str += "pressEnter: " + Pointer3DInputModule.PrintGOPath(pressEnter) + "\n";
+            str += "pointerDrag: " + Pointer3DInputModule.PrintGOPath(pointerDrag) + "\n";
+            return str;
+        }
     }
 }
