@@ -21,6 +21,7 @@ namespace HTC.UnityPlugin.Vive
 
         private interface IPropSetting
         {
+            void UpdateCurrentValue();
             bool IsIgnored();
             bool IsUsingRecommendedValue();
             void DoDrawRecommend();
@@ -40,19 +41,22 @@ namespace HTC.UnityPlugin.Vive
             private string ignoreKey { get { return editorPrefsPrefix + m_settingTrimedTitle; } }
 
             public string settingTitle { get { return m_settingTitle; } set { m_settingTitle = value; m_settingTrimedTitle = value.Replace(" ", ""); } }
-            public string recommendBtnPostfix;
+            public string recommendBtnPostfix = string.Empty;
             public string toolTip = string.Empty;
             public Func<T> currentValueFunc = null;
             public Action<T> setValueFunc = null;
+            public T currentValue = default(T);
             public T recommendedValue = default(T);
 
             public bool IsIgnored() { return EditorPrefs.HasKey(ignoreKey); }
 
-            public bool IsUsingRecommendedValue() { return EqualityComparer<T>.Default.Equals(currentValueFunc(), recommendedValue); }
+            public bool IsUsingRecommendedValue() { return EqualityComparer<T>.Default.Equals(currentValue, recommendedValue); }
+
+            public void UpdateCurrentValue() { currentValue = currentValueFunc(); }
 
             public void DoDrawRecommend()
             {
-                GUILayout.Label(new GUIContent(string.Format(fmtTitle, settingTitle, currentValueFunc()), toolTip));
+                GUILayout.Label(new GUIContent(string.Format(fmtTitle, settingTitle, currentValue), toolTip));
 
                 GUILayout.BeginHorizontal();
 
@@ -97,9 +101,6 @@ namespace HTC.UnityPlugin.Vive
             }
         }
 
-        public const string VIU_BINDING_INTERFACE_SWITCH_SYMBOL = "VIU_BINDING_INTERFACE_SWITCH";
-        public const string VIU_EXTERNAL_CAMERA_SWITCH_SYMBOL = "VIU_EXTERNAL_CAMERA_SWITCH";
-
         public const string lastestVersionUrl = "https://api.github.com/repos/ViveSoftware/ViveInputUtility-Unity/releases/latest";
         public const string pluginUrl = "https://github.com/ViveSoftware/ViveInputUtility-Unity/releases";
         public const double versionCheckIntervalMinutes = 60.0;
@@ -109,10 +110,6 @@ namespace HTC.UnityPlugin.Vive
         private static string nextVersionCheckTimeKey;
         private static string fmtIgnoreUpdateKey;
         private static string ignoreThisVersionKey;
-
-        private const string BIND_UI_SWITCH_TOOLTIP = "When enabled, pressing RightShift + B to open the binding interface in play mode.";
-        private const string EX_CAM_UI_SWITCH_TOOLTIP = "When enabled, pressing RightShift + M to toggle the quad view while external camera config file exist.";
-        private static bool s_waitingForCompile;
 
         private static bool completeCheckVersionFlow = false;
         private static WWW www;
@@ -124,26 +121,15 @@ namespace HTC.UnityPlugin.Vive
         private static bool showNewVersion;
 
         private static bool toggleSkipThisVersion = false;
-#if VIU_BINDING_INTERFACE_SWITCH
-        private static bool toggleBindUISwithState = true;
-#else
-        private static bool toggleBindUISwithState = false;
-#endif
-#if VIU_EXTERNAL_CAMERA_SWITCH
-        private static bool toggleExCamSwithState = true;
-#else
-        private static bool toggleExCamSwithState = false;
-#endif
 
         private static IPropSetting[] s_settings = new IPropSetting[]
         {
             new PropSetting<bool>()
             {
-            settingTitle = "Binding Interface",
-            recommendBtnPostfix = "requires re-compiling",
-            toolTip = BIND_UI_SWITCH_TOOLTIP + " You can change this option later in Edit -> Preferences... -> VIU Settings.",
-            currentValueFunc = () => toggleBindUISwithState,
-            setValueFunc = (v) => toggleBindUISwithState = v,
+            settingTitle = "Binding Interface Switch",
+            toolTip = VIUSettings.BIND_UI_SWITCH_TOOLTIP + " You can change this option later in Edit -> Preferences... -> VIU Settings.",
+            currentValueFunc = () => VIUSettings.enableBindingInterfaceSwitch,
+            setValueFunc = (v) => { VIUSettings.enableBindingInterfaceSwitch = v; VIUSettings.EditorSave(); },
 #if VIU_STEAMVR
             recommendedValue = true,
 #else
@@ -153,11 +139,10 @@ namespace HTC.UnityPlugin.Vive
 
             new PropSetting<bool>()
             {
-            settingTitle = "External Camera Interface",
-            recommendBtnPostfix = "requires re-compiling",
-            toolTip = EX_CAM_UI_SWITCH_TOOLTIP + " You can change this option later in Edit -> Preferences... -> VIU Settings.",
-            currentValueFunc = () => toggleExCamSwithState,
-            setValueFunc = (v) => toggleExCamSwithState = v,
+            settingTitle = "External Camera Switch",
+            toolTip = VIUSettings.EX_CAM_UI_SWITCH_TOOLTIP + " You can change this option later in Edit -> Preferences... -> VIU Settings.",
+            currentValueFunc = () => VIUSettings.enableExternalCameraSwitch,
+            setValueFunc = (v) => { VIUSettings.enableExternalCameraSwitch = v; VIUSettings.EditorSave(); },
 #if VIU_STEAMVR
             recommendedValue = true,
 #else
@@ -261,7 +246,7 @@ namespace HTC.UnityPlugin.Vive
             {
             settingTitle = "GPU Skinning",
             currentValueFunc = () => PlayerSettings.gpuSkinning ,
-            setValueFunc = (v) =>PlayerSettings.gpuSkinning  = v,
+            setValueFunc = (v) => PlayerSettings.gpuSkinning  = v,
             recommendedValue = true,
             },
 #endif
@@ -369,6 +354,8 @@ namespace HTC.UnityPlugin.Vive
             var recommendCount = 0; // not ignored and not using recommended value
             foreach (var setting in s_settings)
             {
+                setting.UpdateCurrentValue();
+
                 if (!setting.IsIgnored() && !setting.IsUsingRecommendedValue())
                 {
                     ++recommendCount;
@@ -478,6 +465,8 @@ namespace HTC.UnityPlugin.Vive
 
             foreach (var setting in s_settings)
             {
+                setting.UpdateCurrentValue();
+
                 if (setting.IsIgnored()) { ++ignoredCount; }
 
                 if (setting.IsUsingRecommendedValue()) { continue; }
@@ -547,7 +536,6 @@ namespace HTC.UnityPlugin.Vive
             }
         }
 
-
         private void OnDestroy()
         {
             if (viuLogo != null)
@@ -558,146 +546,6 @@ namespace HTC.UnityPlugin.Vive
             if (showNewVersion && toggleSkipThisVersion && !string.IsNullOrEmpty(ignoreThisVersionKey))
             {
                 EditorPrefs.SetBool(ignoreThisVersionKey, true);
-            }
-
-            if (
-#if VIU_BINDING_INTERFACE_SWITCH
-                !toggleBindUISwithState
-#else
-                toggleBindUISwithState
-#endif
-                ||
-#if VIU_EXTERNAL_CAMERA_SWITCH
-                !toggleExCamSwithState
-#else
-                toggleExCamSwithState
-#endif
-                )
-            {
-                EditSymbols(
-                    new EditSymbolArg() { symbol = VIU_BINDING_INTERFACE_SWITCH_SYMBOL, enable = toggleBindUISwithState },
-                    new EditSymbolArg() { symbol = VIU_EXTERNAL_CAMERA_SWITCH_SYMBOL, enable = toggleExCamSwithState }
-                );
-            }
-        }
-
-        private struct EditSymbolArg
-        {
-            public string symbol;
-            public bool enable;
-        }
-
-        private static void EditSymbols(params EditSymbolArg[] args)
-        {
-            var symbolChanged = false;
-            var scriptingDefineSymbols = PlayerSettings.GetScriptingDefineSymbolsForGroup(BuildTargetGroup.Standalone);
-            var symbolsList = new List<string>(scriptingDefineSymbols.Split(';'));
-
-            foreach (var arg in args)
-            {
-                if (arg.enable)
-                {
-                    if (!symbolsList.Contains(arg.symbol))
-                    {
-                        symbolsList.Add(arg.symbol);
-                        symbolChanged = true;
-                    }
-                }
-                else
-                {
-                    if (symbolsList.RemoveAll(s => s == arg.symbol) > 0)
-                    {
-                        symbolChanged = true;
-                    }
-                }
-            }
-
-            if (symbolChanged)
-            {
-                EditorApplication.delayCall += GetSetSymbolsCallback(string.Join(";", symbolsList.ToArray()));
-            }
-        }
-
-        private static EditorApplication.CallbackFunction GetSetSymbolsCallback(string symbols)
-        {
-            return () => PlayerSettings.SetScriptingDefineSymbolsForGroup(BuildTargetGroup.Standalone, symbols);
-        }
-
-        [PreferenceItem("VIU Settings")]
-        public static void OnVIUPreferenceGUI()
-        {
-            EditorGUILayout.LabelField("Vive Input Utility v" + VIUVersion.current);
-
-            EditorGUILayout.BeginHorizontal();
-            {
-                if (GUILayout.Button(new GUIContent("Checkout Latest Version", "Goto " + pluginUrl)))
-                {
-                    Application.OpenURL(pluginUrl);
-                }
-
-                GUILayout.FlexibleSpace();
-            }
-            EditorGUILayout.EndHorizontal();
-
-            if (!s_waitingForCompile)
-            {
-                bool toggleValue;
-
-                EditorGUI.BeginChangeCheck();
-
-                GUILayout.BeginHorizontal();
-                {
-                    toggleValue = EditorGUILayout.ToggleLeft(new GUIContent("", BIND_UI_SWITCH_TOOLTIP),
-#if VIU_BINDING_INTERFACE_SWITCH
-                    true
-#else
-                    false
-#endif
-                    , GUILayout.MaxWidth(15f));
-                    EditorGUILayout.LabelField(new GUIContent("Enable Binding Interface Switch - requires re-compiling", BIND_UI_SWITCH_TOOLTIP));
-                }
-                GUILayout.EndHorizontal();
-
-                if (EditorGUI.EndChangeCheck())
-                {
-                    s_waitingForCompile = true;
-                    EditSymbols(new EditSymbolArg() { symbol = VIU_BINDING_INTERFACE_SWITCH_SYMBOL, enable = toggleValue });
-                    return;
-                }
-
-                EditorGUI.BeginChangeCheck();
-
-                GUILayout.BeginHorizontal();
-                {
-                    toggleValue = EditorGUILayout.ToggleLeft(new GUIContent("", EX_CAM_UI_SWITCH_TOOLTIP),
-#if VIU_EXTERNAL_CAMERA_SWITCH
-                    true
-#else
-                    false
-#endif
-                    , GUILayout.MaxWidth(15f));
-                    EditorGUILayout.LabelField(new GUIContent("Enable External Camera Switch - requires re-compiling", EX_CAM_UI_SWITCH_TOOLTIP));
-                }
-                GUILayout.EndHorizontal();
-
-                if (EditorGUI.EndChangeCheck())
-                {
-                    s_waitingForCompile = true;
-                    EditSymbols(new EditSymbolArg() { symbol = VIU_EXTERNAL_CAMERA_SWITCH_SYMBOL, enable = toggleValue });
-                    return;
-                }
-            }
-            else
-            {
-                GUILayout.FlexibleSpace();
-                GUILayout.BeginHorizontal();
-                {
-                    GUILayout.FlexibleSpace();
-                    GUILayout.Label("Re-compiling...");
-                    GUILayout.FlexibleSpace();
-                }
-                GUILayout.EndHorizontal();
-                GUILayout.FlexibleSpace();
             }
         }
     }

@@ -208,10 +208,9 @@ public class ExternalCameraHook : SingletonBehaviour<ExternalCameraHook>, INewPo
 
     public virtual void AfterNewPoses() { }
 
-#if VIU_EXTERNAL_CAMERA_SWITCH
     private void Update()
     {
-        if (Input.GetKeyDown(KeyCode.M) && Input.GetKey(KeyCode.RightShift))
+        if (VIUSettings.enableExternalCameraSwitch && Input.GetKeyDown(KeyCode.M) && Input.GetKey(KeyCode.RightShift))
         {
             if (!isQuadViewActive)
             {
@@ -234,7 +233,6 @@ public class ExternalCameraHook : SingletonBehaviour<ExternalCameraHook>, INewPo
             UpdateActivity();
         }
     }
-#endif
 
     private void OnDeviceIndexChanged(uint deviceIndex)
     {
