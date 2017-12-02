@@ -14,7 +14,7 @@ namespace HTC.UnityPlugin.VRModuleManagement
     {
         Auto = -1,
         None = 0,
-        //Simulator = 1,
+        Simulator = 1,
         UnityNativeVR = 2,
         SteamVR = 3,
         OculusVR = 4,
@@ -24,7 +24,7 @@ namespace HTC.UnityPlugin.VRModuleManagement
     {
         Uninitialized = -1,
         None = VRModuleSelectEnum.None,
-        //Simulator = SelectVRModuleEnum.Simulator,
+        Simulator = VRModuleSelectEnum.Simulator,
         UnityNativeVR = VRModuleSelectEnum.UnityNativeVR,
         SteamVR = VRModuleSelectEnum.SteamVR,
         OculusVR = VRModuleSelectEnum.OculusVR,
@@ -71,6 +71,14 @@ namespace HTC.UnityPlugin.VRModuleManagement
             get
             {
                 return Instance == null ? VRModuleActiveEnum.Uninitialized : Instance.m_activatedModule;
+            }
+        }
+
+        public static SimulatorVRModule simulateModule
+        {
+            get
+            {
+                return Instance == null ? null : Instance.m_modules[(int)VRModuleActiveEnum.Simulator] as SimulatorVRModule;
             }
         }
 

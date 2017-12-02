@@ -41,6 +41,8 @@ namespace HTC.UnityPlugin.Vive
         [SerializeField, Tooltip(EX_CAM_UI_SWITCH_TOOLTIP)]
         private bool m_enableExternalCameraSwitch;
         [SerializeField]
+        private bool m_simulatorSupport = false;
+        [SerializeField]
         private bool m_unityNativeVRSupport = true;
         [SerializeField]
         private bool m_steamVRSupport = true;
@@ -50,6 +52,8 @@ namespace HTC.UnityPlugin.Vive
         public static bool enableBindingInterfaceSwitch { get { return Instance.m_enableBindingInterfaceSwitch; } set { Instance.m_enableBindingInterfaceSwitch = value; } }
 
         public static bool enableExternalCameraSwitch { get { return Instance.m_enableExternalCameraSwitch; } set { Instance.m_enableExternalCameraSwitch = value; } }
+
+        public static bool simulatorSupport { get { return Instance.m_simulatorSupport; } set { Instance.m_simulatorSupport = value; } }
 
         public static bool unityNativeVRSupport { get { return Instance.m_unityNativeVRSupport; } set { Instance.m_unityNativeVRSupport = value; } }
 
@@ -140,9 +144,10 @@ namespace HTC.UnityPlugin.Vive
                 var changed = false;
                 changed |= enableBindingInterfaceSwitch != (enableBindingInterfaceSwitch = UnityEditor.EditorGUILayout.Toggle(new GUIContent("Enable Binding Interface Switch", BIND_UI_SWITCH_TOOLTIP), enableBindingInterfaceSwitch));
                 changed |= enableExternalCameraSwitch != (enableExternalCameraSwitch = UnityEditor.EditorGUILayout.Toggle(new GUIContent("Enable External Camera Switch", EX_CAM_UI_SWITCH_TOOLTIP), enableExternalCameraSwitch));
-                changed |= unityNativeVRSupport != (unityNativeVRSupport = UnityEditor.EditorGUILayout.Toggle(new GUIContent("Unity Native VR Module"), unityNativeVRSupport));
-                changed |= steamVRSupport != (steamVRSupport = UnityEditor.EditorGUILayout.Toggle(new GUIContent("Steam VR Module"), steamVRSupport));
-                changed |= oculusVRSupport != (oculusVRSupport = UnityEditor.EditorGUILayout.Toggle(new GUIContent("Oculus VR Module"), oculusVRSupport));
+                changed |= simulatorSupport != (simulatorSupport = UnityEditor.EditorGUILayout.Toggle(new GUIContent("Simulator Module Support"), simulatorSupport));
+                changed |= unityNativeVRSupport != (unityNativeVRSupport = UnityEditor.EditorGUILayout.Toggle(new GUIContent("Unity Native VR Module Support"), unityNativeVRSupport));
+                changed |= steamVRSupport != (steamVRSupport = UnityEditor.EditorGUILayout.Toggle(new GUIContent("Steam VR Module Support"), steamVRSupport));
+                changed |= oculusVRSupport != (oculusVRSupport = UnityEditor.EditorGUILayout.Toggle(new GUIContent("Oculus VR Module Support"), oculusVRSupport));
 
                 if (changed)
                 {

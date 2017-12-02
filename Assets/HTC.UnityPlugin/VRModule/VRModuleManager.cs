@@ -67,7 +67,7 @@ namespace HTC.UnityPlugin.VRModuleManagement
 
             m_modules = new ModuleBase[EnumUtils.GetMaxValue(typeof(VRModuleActiveEnum)) + 1];
             m_modules[(int)VRModuleActiveEnum.None] = new DefaultModule();
-            //s_modules[(int)SupportedModule.Simulator] = new DefaultModule();
+            m_modules[(int)VRModuleActiveEnum.Simulator] = new SimulatorVRModule();
             m_modules[(int)VRModuleActiveEnum.UnityNativeVR] = new UnityEngineVRModule();
             m_modules[(int)VRModuleActiveEnum.SteamVR] = new SteamVRModule();
             m_modules[(int)VRModuleActiveEnum.OculusVR] = new OculusVRModule();
