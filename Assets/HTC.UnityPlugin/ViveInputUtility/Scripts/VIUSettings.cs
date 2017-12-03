@@ -10,6 +10,13 @@ namespace HTC.UnityPlugin.Vive
         public const string BIND_UI_SWITCH_TOOLTIP = "When enabled, pressing RightShift + B to open the binding interface in play mode.";
         public const string EX_CAM_UI_SWITCH_TOOLTIP = "When enabled, pressing RightShift + M to toggle the quad view while external camera config file exist.";
 
+        public const bool ENABLE_BINDING_INTERFACE_SWITCH_DEFAULT_VALUE = false;
+        public const bool ENABLE_EXTERNAL_CAMERA_SWITCH_DEFAULT_VALUE = false;
+        public const bool SIMULATOR_SUPPORT_DEFAULT_VALUE = false;
+        public const bool UNITYN_ATIVEVR_SUPPORT_DEFAULT_VALUE = true;
+        public const bool STEAMVR_SUPPORT_DEFAULT_VALUE = true;
+        public const bool OCULUS_VRSUPPORT_DEFAULT_VALUE = true;
+
         private static VIUSettings s_instance = null;
 
         private static VIUSettings Instance
@@ -37,29 +44,29 @@ namespace HTC.UnityPlugin.Vive
         public static bool isLoaded { get { return s_instance != null; } }
 
         [SerializeField, Tooltip(BIND_UI_SWITCH_TOOLTIP)]
-        private bool m_enableBindingInterfaceSwitch;
+        private bool m_enableBindingInterfaceSwitch = ENABLE_BINDING_INTERFACE_SWITCH_DEFAULT_VALUE;
         [SerializeField, Tooltip(EX_CAM_UI_SWITCH_TOOLTIP)]
-        private bool m_enableExternalCameraSwitch;
+        private bool m_enableExternalCameraSwitch = ENABLE_EXTERNAL_CAMERA_SWITCH_DEFAULT_VALUE;
         [SerializeField]
-        private bool m_simulatorSupport = false;
+        private bool m_simulatorSupport = SIMULATOR_SUPPORT_DEFAULT_VALUE;
         [SerializeField]
-        private bool m_unityNativeVRSupport = true;
+        private bool m_unityNativeVRSupport = UNITYN_ATIVEVR_SUPPORT_DEFAULT_VALUE;
         [SerializeField]
-        private bool m_steamVRSupport = true;
+        private bool m_steamVRSupport = STEAMVR_SUPPORT_DEFAULT_VALUE;
         [SerializeField]
-        private bool m_oculusVRSupport = true;
+        private bool m_oculusVRSupport = OCULUS_VRSUPPORT_DEFAULT_VALUE;
 
-        public static bool enableBindingInterfaceSwitch { get { return Instance.m_enableBindingInterfaceSwitch; } set { Instance.m_enableBindingInterfaceSwitch = value; } }
+        public static bool enableBindingInterfaceSwitch { get { return Instance == null ? ENABLE_BINDING_INTERFACE_SWITCH_DEFAULT_VALUE : s_instance.m_enableBindingInterfaceSwitch; } set { if (Instance != null) { Instance.m_enableBindingInterfaceSwitch = value; } } }
 
-        public static bool enableExternalCameraSwitch { get { return Instance.m_enableExternalCameraSwitch; } set { Instance.m_enableExternalCameraSwitch = value; } }
+        public static bool enableExternalCameraSwitch { get { return Instance == null ? ENABLE_EXTERNAL_CAMERA_SWITCH_DEFAULT_VALUE : s_instance.m_enableExternalCameraSwitch; } set { if (Instance != null) { Instance.m_enableExternalCameraSwitch = value; } } }
 
-        public static bool simulatorSupport { get { return Instance.m_simulatorSupport; } set { Instance.m_simulatorSupport = value; } }
+        public static bool simulatorSupport { get { return Instance == null ? SIMULATOR_SUPPORT_DEFAULT_VALUE : s_instance.m_simulatorSupport; } set { if (Instance != null) { Instance.m_simulatorSupport = value; } } }
 
-        public static bool unityNativeVRSupport { get { return Instance.m_unityNativeVRSupport; } set { Instance.m_unityNativeVRSupport = value; } }
+        public static bool unityNativeVRSupport { get { return Instance == null ? UNITYN_ATIVEVR_SUPPORT_DEFAULT_VALUE : s_instance.m_unityNativeVRSupport; } set { if (Instance != null) { Instance.m_unityNativeVRSupport = value; } } }
 
-        public static bool steamVRSupport { get { return Instance.m_steamVRSupport; } set { Instance.m_steamVRSupport = value; } }
+        public static bool steamVRSupport { get { return Instance == null ? STEAMVR_SUPPORT_DEFAULT_VALUE : s_instance.m_steamVRSupport; } set { if (Instance != null) { Instance.m_steamVRSupport = value; } } }
 
-        public static bool oculusVRSupport { get { return Instance.m_oculusVRSupport; } set { Instance.m_oculusVRSupport = value; } }
+        public static bool oculusVRSupport { get { return Instance == null ? OCULUS_VRSUPPORT_DEFAULT_VALUE : s_instance.m_oculusVRSupport; } set { if (Instance != null) { Instance.m_oculusVRSupport = value; } } }
 
         public static void Load(string path = null)
         {
@@ -73,6 +80,16 @@ namespace HTC.UnityPlugin.Vive
             }
         }
 
+        
+
+        private void OnDestroy()
+        {
+            if (s_instance == this)
+            {
+                s_instance = null;
+            }
+        }
+
 #if UNITY_EDITOR
         private static string s_assetPath;
 
@@ -82,9 +99,20 @@ namespace HTC.UnityPlugin.Vive
             {
                 if (string.IsNullOrEmpty(s_assetPath))
                 {
-                    var ms = UnityEditor.MonoScript.FromScriptableObject(s_instance ?? CreateInstance<VIUSettings>());
+                    var obj = CreateInstance<VIUSettings>();
+                    var ms = UnityEditor.MonoScript.FromScriptableObject(obj);
                     var path = System.IO.Path.GetDirectoryName(UnityEditor.AssetDatabase.GetAssetPath(ms));
                     s_assetPath = path.Substring(0, path.Length - "Scripts".Length) + "Resources/" + SETTING_DATA_RESOURCE_PATH;
+#if UNITY_EDITOR
+                    if (!Application.isPlaying)
+                    {
+                        DestroyImmediate(obj);
+                    }
+                    else
+#endif
+                    {
+                        Destroy(obj);
+                    }
                 }
 
                 return s_assetPath;

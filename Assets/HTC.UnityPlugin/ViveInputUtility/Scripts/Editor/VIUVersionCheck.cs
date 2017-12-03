@@ -284,6 +284,12 @@ namespace HTC.UnityPlugin.Vive
         // check vive input utility version on github
         private static void CheckVersionAndSettings()
         {
+            if (Application.isPlaying)
+            {
+                EditorApplication.update -= CheckVersionAndSettings;
+                return;
+            }
+
             if (string.IsNullOrEmpty(editorPrefsPrefix))
             {
                 editorPrefsPrefix = "ViveInputUtility." + PlayerSettings.productGUID + ".";
