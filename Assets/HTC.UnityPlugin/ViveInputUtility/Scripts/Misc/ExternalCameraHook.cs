@@ -53,7 +53,7 @@ public class ExternalCameraHook : SingletonBehaviour<ExternalCameraHook>, INewPo
         get { return m_quadViewSwitch; }
         set
         {
-            if (m_quadViewSwitch != value)
+            if (IsInstance && m_quadViewSwitch != value)
             {
                 m_quadViewSwitch = value;
                 UpdateActivity();
@@ -66,7 +66,7 @@ public class ExternalCameraHook : SingletonBehaviour<ExternalCameraHook>, INewPo
         get { return m_configInterfaceSwitch; }
         set
         {
-            if (m_configInterfaceSwitch != value)
+            if (IsInstance && m_configInterfaceSwitch != value)
             {
                 m_configInterfaceSwitch = value;
                 UpdateActivity();
@@ -155,7 +155,11 @@ public class ExternalCameraHook : SingletonBehaviour<ExternalCameraHook>, INewPo
     private static bool m_defaultExCamResolved;
     private static void ResolveDefaultExCam()
     {
-        if (m_defaultExCamResolved || !SteamVR.active) { return; }
+        if (m_defaultExCamResolved || VRModule.activeModule != VRModuleActiveEnum.SteamVR || !SteamVR.active)
+        {
+            if (Active) { Instance.m_quadViewSwitch = false; }
+            return;
+        }
         m_defaultExCamResolved = true;
 
         SteamVR_Render.instance.externalCameraConfigPath = string.Empty;
@@ -236,15 +240,15 @@ public class ExternalCameraHook : SingletonBehaviour<ExternalCameraHook>, INewPo
 
     private void OnDeviceIndexChanged(uint deviceIndex)
     {
-        m_quadViewSwitch = isTrackingDevice;
-
-        UpdateActivity();
+        if (IsInstance)
+        {
+            m_quadViewSwitch = isTrackingDevice;
+            UpdateActivity();
+        }
     }
 
     private void UpdateActivity()
     {
-        if (!IsInstance) { return; }
-
         ResolveDefaultExCam();
 
         if (!isActiveAndEnabled)
