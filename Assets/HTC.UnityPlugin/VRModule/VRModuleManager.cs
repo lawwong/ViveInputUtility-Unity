@@ -86,6 +86,14 @@ namespace HTC.UnityPlugin.VRModuleManagement
 #endif
         }
 
+        private void Update()
+        {
+            if(m_activatedModuleBase!= null)
+            {
+                m_activatedModuleBase.Update();
+            }
+        }
+
         protected override void OnDestroy()
         {
             if (IsInstance)
