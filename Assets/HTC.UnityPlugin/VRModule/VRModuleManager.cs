@@ -45,7 +45,6 @@ namespace HTC.UnityPlugin.VRModuleManagement
             SetDefaultInitGameObjectGetter(GetDefaultInitGameObject);
 
             s_defaultState = new DeviceState(INVALID_DEVICE_INDEX);
-            s_defaultState.Reset();
         }
 
         private static GameObject GetDefaultInitGameObject()

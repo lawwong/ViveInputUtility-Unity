@@ -127,6 +127,11 @@ namespace HTC.UnityPlugin.VRModuleManagement
             return Instance == null || !IsValidDeviceIndex(deviceIndex) ? s_defaultState : Instance.m_prevStates[deviceIndex];
         }
 
+        public static IVRModuleDeviceState GetDeviceState(uint deviceIndex, bool usePrevious = false)
+        {
+            return Instance == null || !IsValidDeviceIndex(deviceIndex) ? s_defaultState : (usePrevious ? Instance.m_prevStates[deviceIndex] : Instance.m_currStates[deviceIndex]);
+        }
+
         public static uint GetLeftControllerDeviceIndex()
         {
             return Instance == null || Instance.m_activatedModuleBase == null ? INVALID_DEVICE_INDEX : Instance.m_activatedModuleBase.GetLeftControllerDeviceIndex();
