@@ -130,11 +130,17 @@ namespace HTC.UnityPlugin.Vive
             toolTip = VIUSettings.BIND_UI_SWITCH_TOOLTIP + " You can change this option later in Edit -> Preferences... -> VIU Settings.",
             currentValueFunc = () => VIUSettings.enableBindingInterfaceSwitch,
             setValueFunc = (v) => { VIUSettings.enableBindingInterfaceSwitch = v; VIUSettings.EditorSave(); },
-#if VIU_STEAMVR
-            recommendedValue = true,
+            recommendedValue = 
+#if VIU_STEAMVR && UNITY_2017_2_OR_NWER
+                VIUSettings.steamVRSupport || VIUSettings.unityNativeVRSupport
+#elif VIU_STEAMVR && !UNITY_2017_2_OR_NWER
+                VIUSettings.steamVRSupport
+#elif !VIU_STEAMVR && UNITY_2017_2_OR_NWER
+                VIUSettings.unityNativeVRSupport
 #else
-            recommendedValue = false,
+                false
 #endif
+                ,
             },
 
             new PropSetting<bool>()
@@ -143,11 +149,13 @@ namespace HTC.UnityPlugin.Vive
             toolTip = VIUSettings.EX_CAM_UI_SWITCH_TOOLTIP + " You can change this option later in Edit -> Preferences... -> VIU Settings.",
             currentValueFunc = () => VIUSettings.enableExternalCameraSwitch,
             setValueFunc = (v) => { VIUSettings.enableExternalCameraSwitch = v; VIUSettings.EditorSave(); },
+            recommendedValue = 
 #if VIU_STEAMVR
-            recommendedValue = true,
+                VIUSettings.steamVRSupport
 #else
-            recommendedValue = false,
+                false
 #endif
+                ,
             },
 
 #if !VIU_STEAMVR
