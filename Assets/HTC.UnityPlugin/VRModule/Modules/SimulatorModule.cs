@@ -117,6 +117,11 @@ namespace HTC.UnityPlugin.VRModuleManagement
                 {
                     if (keySelectDevice.isConnected && keySelectDevice.deviceIndex != VRModule.HMD_DEVICE_INDEX)
                     {
+                        if (IsSelectedDevice(keySelectDevice))
+                        {
+                            DeselectDevice();
+                        }
+
                         keySelectDevice.Reset();
                     }
                 }
@@ -140,9 +145,20 @@ namespace HTC.UnityPlugin.VRModuleManagement
                 }
             }
 
-            if (VRModule.IsValidDeviceIndex(m_selectedDeviceIndex))
+            var selectedDevice = VRModule.IsValidDeviceIndex(m_selectedDeviceIndex) && currState[m_selectedDeviceIndex].isConnected ? currState[m_selectedDeviceIndex] : null;
+            if (selectedDevice != null)
             {
-                ControlDevice(currState[m_selectedDeviceIndex]);
+                ControlDevice(selectedDevice);
+
+                if (selectedDevice.deviceClass != VRModuleDeviceClass.HMD)
+                {
+                    HandleDeviceInput(selectedDevice);
+                }
+            }
+
+            if (currState[VRModule.HMD_DEVICE_INDEX].isConnected)
+            {
+                ControlCamera(currState[VRModule.HMD_DEVICE_INDEX]);
             }
 
             if (onUpdateDeviceState != null)
@@ -157,7 +173,6 @@ namespace HTC.UnityPlugin.VRModuleManagement
         }
 
         private uint m_selectedDeviceIndex;
-        private float m_selectedDeviceRotZ;
         private bool IsSelectedDevice(IVRModuleDeviceStateRW state)
         {
             return m_selectedDeviceIndex == state.deviceIndex;
@@ -168,7 +183,6 @@ namespace HTC.UnityPlugin.VRModuleManagement
             m_selectedDeviceIndex = state.deviceIndex;
             Cursor.visible = false;
             Cursor.lockState = CursorLockMode.Locked;
-            m_selectedDeviceRotZ = state.pose.rot.z;
         }
 
         private void DeselectDevice()
@@ -291,32 +305,77 @@ namespace HTC.UnityPlugin.VRModuleManagement
 
         private void ControlDevice(IVRModuleDeviceStateRW deviceState)
         {
-            var deltaDis = Time.unscaledDeltaTime * m_moveSpeed;
-            var deltaPos = Vector3.zero;
-            if (Input.GetKey(KeyCode.D)) { deltaPos.x += deltaDis; }
-            if (Input.GetKey(KeyCode.A)) { deltaPos.x -= deltaDis; }
-            if (Input.GetKey(KeyCode.E)) { deltaPos.y += deltaDis; }
-            if (Input.GetKey(KeyCode.Q)) { deltaPos.y -= deltaDis; }
-            if (Input.GetKey(KeyCode.W)) { deltaPos.z += deltaDis; }
-            if (Input.GetKey(KeyCode.S)) { deltaPos.z -= deltaDis; }
-
-            var deltaEular = Vector3.zero;
-
+            var pose = deviceState.pose;
+            var poseEuler = pose.rot.eulerAngles;
             var deltaAngle = Time.unscaledDeltaTime * m_rotateSpeed;
-            deltaEular.x = -Input.GetAxisRaw("Mouse Y") * deltaAngle;
-            deltaEular.y = Input.GetAxisRaw("Mouse X") * deltaAngle;
-
             var deltaKeyAngle = Time.unscaledDeltaTime * m_rotateKeySpeed;
-            if (Input.GetKey(KeyCode.C)) { deltaEular.z += deltaKeyAngle; }
-            if (Input.GetKey(KeyCode.Z)) { deltaEular.z -= deltaKeyAngle; }
 
-            var destEular = deviceState.rotation.eulerAngles + deltaEular;
+            poseEuler.x += -Input.GetAxisRaw("Mouse Y") * deltaAngle;
+            poseEuler.y += Input.GetAxisRaw("Mouse X") * deltaAngle;
 
-            if (Input.GetKey(KeyCode.X)) { destEular.z = 0f; }
+            if (Input.GetKey(KeyCode.C)) { poseEuler.z += deltaKeyAngle; }
+            if (Input.GetKey(KeyCode.Z)) { poseEuler.z -= deltaKeyAngle; }
+            if (Input.GetKey(KeyCode.X)) { poseEuler.z = 0f; }
 
-            deviceState.rotation = Quaternion.Euler(destEular);
-            deviceState.pose *= new RigidPose(deltaPos, Quaternion.identity);
+            pose.rot = Quaternion.Euler(poseEuler);
+
+            var deltaMove = Time.unscaledDeltaTime * m_moveSpeed;
+            var moveForward = Quaternion.Euler(0f, poseEuler.y, 0f) * Vector3.forward;
+            var moveRight = Quaternion.Euler(0f, poseEuler.y, 0f) * Vector3.right;
+            if (Input.GetKey(KeyCode.D)) { pose.pos += moveRight * deltaMove; }
+            if (Input.GetKey(KeyCode.A)) { pose.pos -= moveRight * deltaMove; }
+            if (Input.GetKey(KeyCode.E)) { pose.pos += Vector3.up * deltaMove; }
+            if (Input.GetKey(KeyCode.Q)) { pose.pos -= Vector3.up * deltaMove; }
+            if (Input.GetKey(KeyCode.W)) { pose.pos += moveForward * deltaMove; }
+            if (Input.GetKey(KeyCode.S)) { pose.pos -= moveForward * deltaMove; }
+
+            deviceState.pose = pose;
         }
 
+        private void ControlCamera(IVRModuleDeviceStateRW deviceState)
+        {
+            var pose = deviceState.pose;
+            var poseEuler = pose.rot.eulerAngles;
+            var deltaKeyAngle = Time.unscaledDeltaTime * m_rotateKeySpeed;
+
+            if (Input.GetKey(KeyCode.G)) { poseEuler.x += deltaKeyAngle; }
+            if (Input.GetKey(KeyCode.T)) { poseEuler.x -= deltaKeyAngle; }
+            if (Input.GetKey(KeyCode.H)) { poseEuler.y += deltaKeyAngle; }
+            if (Input.GetKey(KeyCode.F)) { poseEuler.y -= deltaKeyAngle; }
+            if (Input.GetKey(KeyCode.N)) { poseEuler.z += deltaKeyAngle; }
+            if (Input.GetKey(KeyCode.V)) { poseEuler.z -= deltaKeyAngle; }
+            if (Input.GetKey(KeyCode.B)) { poseEuler.z = 0f; }
+
+            pose.rot = Quaternion.Euler(poseEuler);
+
+            var deltaMove = Time.unscaledDeltaTime * m_moveSpeed;
+            var moveForward = Quaternion.Euler(0f, poseEuler.y, 0f) * Vector3.forward;
+            var moveRight = Quaternion.Euler(0f, poseEuler.y, 0f) * Vector3.right;
+            if (Input.GetKey(KeyCode.L)) { pose.pos += moveRight * deltaMove; }
+            if (Input.GetKey(KeyCode.J)) { pose.pos -= moveRight * deltaMove; }
+            if (Input.GetKey(KeyCode.O)) { pose.pos += Vector3.up * deltaMove; }
+            if (Input.GetKey(KeyCode.U)) { pose.pos -= Vector3.up * deltaMove; }
+            if (Input.GetKey(KeyCode.I)) { pose.pos += moveForward * deltaMove; }
+            if (Input.GetKey(KeyCode.K)) { pose.pos -= moveForward * deltaMove; }
+
+            deviceState.pose = pose;
+        }
+
+        private void HandleDeviceInput(IVRModuleDeviceStateRW deviceState)
+        {
+            var leftPressed = Input.GetMouseButton(0);
+            var midPressed = Input.GetMouseButton(1);
+            var rightPressed = Input.GetMouseButton(2);
+
+            deviceState.SetButtonPress(VRModuleRawButton.Trigger, leftPressed);
+            deviceState.SetButtonTouch(VRModuleRawButton.Trigger, leftPressed);
+            deviceState.SetAxisValue(VRModuleRawAxis.Trigger, leftPressed ? 1f : 0f);
+            deviceState.SetButtonPress(VRModuleRawButton.Grip, midPressed);
+            deviceState.SetButtonTouch(VRModuleRawButton.Grip, midPressed);
+            deviceState.SetAxisValue(VRModuleRawAxis.CapSenseGrip, midPressed ? 1f : 0f);
+            deviceState.SetButtonPress(VRModuleRawButton.Touchpad, rightPressed);
+            deviceState.SetButtonTouch(VRModuleRawButton.Touchpad, rightPressed);
+            //deviceState.SetAxisValue(VRModuleRawAxis.Trigger, rightPressed ? 1f : 0f);
+        }
     }
 }
