@@ -115,7 +115,6 @@ namespace HTC.UnityPlugin.Vive
         private static WWW www;
         private static RepoInfo latestRepoInfo;
         private static Version latestVersion;
-        private static VIUVersionCheck window;
         private static Vector2 releaseNoteScrollPosition;
         private static Vector2 settingScrollPosition;
         private static bool showNewVersion;
@@ -378,7 +377,7 @@ namespace HTC.UnityPlugin.Vive
 
             if (showNewVersion || recommendCount > 0)
             {
-                window = GetWindow<VIUVersionCheck>(true, "Vive Input Utility");
+                var window = GetWindow<VIUVersionCheck>(true, "Vive Input Utility");
                 window.minSize = new Vector2(240f, 550f);
 
                 var rect = window.position;

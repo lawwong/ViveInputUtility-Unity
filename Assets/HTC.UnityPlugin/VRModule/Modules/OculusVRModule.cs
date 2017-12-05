@@ -3,6 +3,7 @@
 #if VIU_OCULUSVR
 using UnityEngine;
 using HTC.UnityPlugin.Utility;
+using HTC.UnityPlugin.Vive;
 #if UNITY_2017_2_OR_NEWER
 using UnityEngine.XR;
 #else
