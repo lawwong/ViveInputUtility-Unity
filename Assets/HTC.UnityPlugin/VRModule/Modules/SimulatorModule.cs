@@ -30,7 +30,7 @@ namespace HTC.UnityPlugin.VRModuleManagement
         private bool m_autoCamTracking = true;
         private bool m_resetDevices;
         private float m_moveSpeed = 1.5f; // meter/second
-        private float m_rotateSpeed = 45f; // angle/unit
+        private float m_rotateSpeed = 75f; // angle/unit
         private float m_rotateKeySpeed = 60f; // angle/second
 
         public event Action onActivated;
@@ -113,6 +113,7 @@ namespace HTC.UnityPlugin.VRModuleManagement
             var keySelectDevice = default(IVRModuleDeviceStateRW);
             if (GetDeviceByInputDownKeyCode(currState, out keySelectDevice))
             {
+                Debug.Log("GetDeviceByInputDownKeyCode " + keySelectDevice.deviceIndex);
                 if (Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift))
                 {
                     if (keySelectDevice.isConnected && keySelectDevice.deviceIndex != VRModule.HMD_DEVICE_INDEX)
@@ -193,19 +194,21 @@ namespace HTC.UnityPlugin.VRModuleManagement
         }
 
         // Input.GetKeyDown in UpdateDeviceState is not working
+        private bool m_ctrlKeyDownState = false;
         private bool[] m_alphaKeyDownState = new bool[10];
         private void UpdateAlphaKeyDown()
         {
-            m_alphaKeyDownState[0] = Input.GetKeyDown(KeyCode.Alpha0);
-            m_alphaKeyDownState[1] = Input.GetKeyDown(KeyCode.Alpha1);
-            m_alphaKeyDownState[2] = Input.GetKeyDown(KeyCode.Alpha2);
-            m_alphaKeyDownState[3] = Input.GetKeyDown(KeyCode.Alpha3);
-            m_alphaKeyDownState[4] = Input.GetKeyDown(KeyCode.Alpha4);
-            m_alphaKeyDownState[5] = Input.GetKeyDown(KeyCode.Alpha5);
-            m_alphaKeyDownState[6] = Input.GetKeyDown(KeyCode.Alpha6);
-            m_alphaKeyDownState[7] = Input.GetKeyDown(KeyCode.Alpha7);
-            m_alphaKeyDownState[8] = Input.GetKeyDown(KeyCode.Alpha8);
-            m_alphaKeyDownState[9] = Input.GetKeyDown(KeyCode.Alpha9);
+            m_ctrlKeyDownState = Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.LeftCommand) || Input.GetKey(KeyCode.RightControl) || Input.GetKey(KeyCode.RightCommand);
+            m_alphaKeyDownState[0] = Input.GetKeyDown(KeyCode.Alpha0) || Input.GetKeyDown(KeyCode.Keypad0);
+            m_alphaKeyDownState[1] = Input.GetKeyDown(KeyCode.Alpha1) || Input.GetKeyDown(KeyCode.Keypad1);
+            m_alphaKeyDownState[2] = Input.GetKeyDown(KeyCode.Alpha2) || Input.GetKeyDown(KeyCode.Keypad2);
+            m_alphaKeyDownState[3] = Input.GetKeyDown(KeyCode.Alpha3) || Input.GetKeyDown(KeyCode.Keypad3);
+            m_alphaKeyDownState[4] = Input.GetKeyDown(KeyCode.Alpha4) || Input.GetKeyDown(KeyCode.Keypad4);
+            m_alphaKeyDownState[5] = Input.GetKeyDown(KeyCode.Alpha5) || Input.GetKeyDown(KeyCode.Keypad5);
+            m_alphaKeyDownState[6] = Input.GetKeyDown(KeyCode.Alpha6) || Input.GetKeyDown(KeyCode.Keypad6);
+            m_alphaKeyDownState[7] = Input.GetKeyDown(KeyCode.Alpha7) || Input.GetKeyDown(KeyCode.Keypad7);
+            m_alphaKeyDownState[8] = Input.GetKeyDown(KeyCode.Alpha8) || Input.GetKeyDown(KeyCode.Keypad8);
+            m_alphaKeyDownState[9] = Input.GetKeyDown(KeyCode.Alpha9) || Input.GetKeyDown(KeyCode.Keypad9);
         }
 
         private bool GetAlphaKeyDown(int num)
@@ -215,16 +218,22 @@ namespace HTC.UnityPlugin.VRModuleManagement
 
         private bool GetDeviceByInputDownKeyCode(IVRModuleDeviceStateRW[] deviceStates, out IVRModuleDeviceStateRW deviceState)
         {
-            if (GetAlphaKeyDown(1)) { deviceState = deviceStates[1]; return true; }
-            if (GetAlphaKeyDown(2)) { deviceState = deviceStates[2]; return true; }
-            if (GetAlphaKeyDown(3)) { deviceState = deviceStates[3]; return true; }
-            if (GetAlphaKeyDown(4)) { deviceState = deviceStates[4]; return true; }
-            if (GetAlphaKeyDown(5)) { deviceState = deviceStates[5]; return true; }
-            if (GetAlphaKeyDown(6)) { deviceState = deviceStates[6]; return true; }
-            if (GetAlphaKeyDown(7)) { deviceState = deviceStates[7]; return true; }
-            if (GetAlphaKeyDown(8)) { deviceState = deviceStates[8]; return true; }
-            if (GetAlphaKeyDown(9)) { deviceState = deviceStates[9]; return true; }
-            if (GetAlphaKeyDown(0)) { deviceState = deviceStates[0]; return true; }
+            if (!m_ctrlKeyDownState && GetAlphaKeyDown(0)) { deviceState = deviceStates[0]; return true; }
+            if (!m_ctrlKeyDownState && GetAlphaKeyDown(1)) { deviceState = deviceStates[1]; return true; }
+            if (!m_ctrlKeyDownState && GetAlphaKeyDown(2)) { deviceState = deviceStates[2]; return true; }
+            if (!m_ctrlKeyDownState && GetAlphaKeyDown(3)) { deviceState = deviceStates[3]; return true; }
+            if (!m_ctrlKeyDownState && GetAlphaKeyDown(4)) { deviceState = deviceStates[4]; return true; }
+            if (!m_ctrlKeyDownState && GetAlphaKeyDown(5)) { deviceState = deviceStates[5]; return true; }
+            if (!m_ctrlKeyDownState && GetAlphaKeyDown(6)) { deviceState = deviceStates[6]; return true; }
+            if (!m_ctrlKeyDownState && GetAlphaKeyDown(7)) { deviceState = deviceStates[7]; return true; }
+            if (!m_ctrlKeyDownState && GetAlphaKeyDown(8)) { deviceState = deviceStates[8]; return true; }
+            if (!m_ctrlKeyDownState && GetAlphaKeyDown(9)) { deviceState = deviceStates[9]; return true; }
+            if (m_ctrlKeyDownState && GetAlphaKeyDown(0)) { deviceState = deviceStates[10]; return true; }
+            if (m_ctrlKeyDownState && GetAlphaKeyDown(1)) { deviceState = deviceStates[11]; return true; }
+            if (m_ctrlKeyDownState && GetAlphaKeyDown(2)) { deviceState = deviceStates[12]; return true; }
+            if (m_ctrlKeyDownState && GetAlphaKeyDown(3)) { deviceState = deviceStates[13]; return true; }
+            if (m_ctrlKeyDownState && GetAlphaKeyDown(4)) { deviceState = deviceStates[14]; return true; }
+            if (m_ctrlKeyDownState && GetAlphaKeyDown(5)) { deviceState = deviceStates[15]; return true; }
 
             deviceState = null;
             return false;
