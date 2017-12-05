@@ -130,11 +130,11 @@ namespace HTC.UnityPlugin.Vive
             currentValueFunc = () => VIUSettings.enableBindingInterfaceSwitch,
             setValueFunc = (v) => { VIUSettings.enableBindingInterfaceSwitch = v; VIUSettings.EditorSave(); },
             recommendedValue = 
-#if VIU_STEAMVR && UNITY_2017_2_OR_NWER
+#if VIU_STEAMVR && UNITY_2017_2_OR_NEWER
                 VIUSettings.steamVRSupport || VIUSettings.unityNativeVRSupport
-#elif VIU_STEAMVR && !UNITY_2017_2_OR_NWER
+#elif VIU_STEAMVR && !UNITY_2017_2_OR_NEWER
                 VIUSettings.steamVRSupport
-#elif !VIU_STEAMVR && UNITY_2017_2_OR_NWER
+#elif !VIU_STEAMVR && UNITY_2017_2_OR_NEWER
                 VIUSettings.unityNativeVRSupport
 #else
                 false
