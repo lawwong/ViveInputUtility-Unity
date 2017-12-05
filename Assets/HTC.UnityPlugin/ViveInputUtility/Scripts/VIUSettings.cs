@@ -25,15 +25,10 @@ namespace HTC.UnityPlugin.Vive
             {
                 if (s_instance == null)
                 {
-                    if (Application.isPlaying)
-                    {
-                        Load();
-                    }
 #if UNITY_EDITOR
-                    else
-                    {
-                        EditorLoad();
-                    }
+                    EditorLoad();
+#else
+                    Load();
 #endif
                 }
 
@@ -103,16 +98,6 @@ namespace HTC.UnityPlugin.Vive
                     var ms = UnityEditor.MonoScript.FromScriptableObject(obj);
                     var path = System.IO.Path.GetDirectoryName(UnityEditor.AssetDatabase.GetAssetPath(ms));
                     s_assetPath = path.Substring(0, path.Length - "Scripts".Length) + "Resources/" + SETTING_DATA_RESOURCE_PATH;
-//#if UNITY_EDITOR
-//                    if (!Application.isPlaying)
-//                    {
-//                        DestroyImmediate(obj);
-//                    }
-//                    else
-//#endif
-//                    {
-//                        Destroy(obj);
-//                    }
                 }
 
                 return s_assetPath;
