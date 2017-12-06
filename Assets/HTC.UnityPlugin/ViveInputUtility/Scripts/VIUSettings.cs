@@ -6,7 +6,7 @@ namespace HTC.UnityPlugin.Vive
 {
     public class VIUSettings : ScriptableObject
     {
-        public const string SETTING_DATA_RESOURCE_PATH = "VIUSettings.asset";
+        public const string SETTING_DATA_RESOURCE_PATH = "VIUSettings";
         public const string BIND_UI_SWITCH_TOOLTIP = "When enabled, pressing RightShift + B to open the binding interface in play mode.";
         public const string EX_CAM_UI_SWITCH_TOOLTIP = "When enabled, pressing RightShift + M to toggle the quad view while external camera config file exist.";
 
@@ -36,8 +36,6 @@ namespace HTC.UnityPlugin.Vive
             }
         }
 
-        public static bool isLoaded { get { return s_instance != null; } }
-
         [SerializeField, Tooltip(BIND_UI_SWITCH_TOOLTIP)]
         private bool m_enableBindingInterfaceSwitch = ENABLE_BINDING_INTERFACE_SWITCH_DEFAULT_VALUE;
         [SerializeField, Tooltip(EX_CAM_UI_SWITCH_TOOLTIP)]
@@ -51,6 +49,12 @@ namespace HTC.UnityPlugin.Vive
         [SerializeField]
         private bool m_oculusVRSupport = OCULUS_VRSUPPORT_DEFAULT_VALUE;
 
+        private bool m_islLoadedFromAsset;
+
+        public static bool isLoaded { get { return s_instance != null; } }
+
+        public static bool isLoadedFromAsset { get { return s_instance == null ? false : s_instance.m_islLoadedFromAsset; } }
+
         public static bool enableBindingInterfaceSwitch { get { return Instance == null ? ENABLE_BINDING_INTERFACE_SWITCH_DEFAULT_VALUE : s_instance.m_enableBindingInterfaceSwitch; } set { if (Instance != null) { Instance.m_enableBindingInterfaceSwitch = value; } } }
 
         public static bool enableExternalCameraSwitch { get { return Instance == null ? ENABLE_EXTERNAL_CAMERA_SWITCH_DEFAULT_VALUE : s_instance.m_enableExternalCameraSwitch; } set { if (Instance != null) { Instance.m_enableExternalCameraSwitch = value; } } }
@@ -63,19 +67,28 @@ namespace HTC.UnityPlugin.Vive
 
         public static bool oculusVRSupport { get { return Instance == null ? OCULUS_VRSUPPORT_DEFAULT_VALUE : s_instance.m_oculusVRSupport; } set { if (Instance != null) { Instance.m_oculusVRSupport = value; } } }
 
-        public static void Load(string path = null)
+        public static void Load(string resourcePath = null)
         {
 #if UNITY_EDITOR
             // load resource in playing mode only?
             if (!Application.isPlaying) { return; }
 #endif
-            if (string.IsNullOrEmpty(path) || (s_instance = Resources.Load<VIUSettings>(SETTING_DATA_RESOURCE_PATH)) == null)
+            if (string.IsNullOrEmpty(resourcePath))
+            {
+                resourcePath = SETTING_DATA_RESOURCE_PATH;
+            }
+
+            if ((s_instance = Resources.Load<VIUSettings>(resourcePath)) == null)
             {
                 s_instance = CreateInstance<VIUSettings>();
             }
+            else
+            {
+                s_instance.m_islLoadedFromAsset = true;
+            }
         }
 
-        
+
 
         private void OnDestroy()
         {
@@ -97,7 +110,7 @@ namespace HTC.UnityPlugin.Vive
                     var obj = CreateInstance<VIUSettings>();
                     var ms = UnityEditor.MonoScript.FromScriptableObject(obj);
                     var path = System.IO.Path.GetDirectoryName(UnityEditor.AssetDatabase.GetAssetPath(ms));
-                    s_assetPath = path.Substring(0, path.Length - "Scripts".Length) + "Resources/" + SETTING_DATA_RESOURCE_PATH;
+                    s_assetPath = path.Substring(0, path.Length - "Scripts".Length) + "Resources/" + SETTING_DATA_RESOURCE_PATH + ".asset";
                 }
 
                 return s_assetPath;
@@ -114,6 +127,10 @@ namespace HTC.UnityPlugin.Vive
             if ((s_instance = UnityEditor.AssetDatabase.LoadAssetAtPath<VIUSettings>(path)) == null)
             {
                 s_instance = CreateInstance<VIUSettings>();
+            }
+            else
+            {
+                s_instance.m_islLoadedFromAsset = true;
             }
         }
 
