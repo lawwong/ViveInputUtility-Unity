@@ -25,13 +25,14 @@ namespace HTC.UnityPlugin.VRModuleManagement
     {
         private const uint RIGHT_INDEX = 1;
         private const uint LEFT_INDEX = 2;
+        private static readonly RigidPose m_initHmdPose = new RigidPose(new Vector3(0f, 1.75f, 0f), Quaternion.identity);
 
         private bool m_prevXREnabled;
         private bool m_autoCamTracking = true;
         private bool m_resetDevices;
         private float m_moveSpeed = 1.5f; // meter/second
-        private float m_rotateSpeed = 75f; // angle/unit
-        private float m_rotateKeySpeed = 60f; // angle/second
+        private float m_rotateSpeed = 90f; // angle/unit
+        private float m_rotateKeySpeed = 90f; // angle/second
 
         public event Action onActivated;
         public event Action onDeactivated;
@@ -93,7 +94,7 @@ namespace HTC.UnityPlugin.VRModuleManagement
                         case VRModule.HMD_DEVICE_INDEX:
                         case RIGHT_INDEX:
                         case LEFT_INDEX:
-                            InitializeDevice(state);
+                            InitializeDevice(currState[VRModule.HMD_DEVICE_INDEX], state);
                             break;
                         default:
                             if (state.isConnected)
@@ -113,8 +114,7 @@ namespace HTC.UnityPlugin.VRModuleManagement
             var keySelectDevice = default(IVRModuleDeviceStateRW);
             if (GetDeviceByInputDownKeyCode(currState, out keySelectDevice))
             {
-                Debug.Log("GetDeviceByInputDownKeyCode " + keySelectDevice.deviceIndex);
-                if (Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift))
+                if (IsShiftKeyPressed())
                 {
                     if (keySelectDevice.isConnected && keySelectDevice.deviceIndex != VRModule.HMD_DEVICE_INDEX)
                     {
@@ -133,7 +133,7 @@ namespace HTC.UnityPlugin.VRModuleManagement
                         // select
                         if (!keySelectDevice.isConnected)
                         {
-                            InitializeDevice(keySelectDevice);
+                            InitializeDevice(currState[VRModule.HMD_DEVICE_INDEX], keySelectDevice);
                         }
 
                         SelectDevice(keySelectDevice);
@@ -194,11 +194,11 @@ namespace HTC.UnityPlugin.VRModuleManagement
         }
 
         // Input.GetKeyDown in UpdateDeviceState is not working
-        private bool m_ctrlKeyDownState = false;
+        private bool m_shiftKeyPressed;
         private bool[] m_alphaKeyDownState = new bool[10];
         private void UpdateAlphaKeyDown()
         {
-            m_ctrlKeyDownState = Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.LeftCommand) || Input.GetKey(KeyCode.RightControl) || Input.GetKey(KeyCode.RightCommand);
+            m_shiftKeyPressed = Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift);
             m_alphaKeyDownState[0] = Input.GetKeyDown(KeyCode.Alpha0) || Input.GetKeyDown(KeyCode.Keypad0);
             m_alphaKeyDownState[1] = Input.GetKeyDown(KeyCode.Alpha1) || Input.GetKeyDown(KeyCode.Keypad1);
             m_alphaKeyDownState[2] = Input.GetKeyDown(KeyCode.Alpha2) || Input.GetKeyDown(KeyCode.Keypad2);
@@ -211,35 +211,41 @@ namespace HTC.UnityPlugin.VRModuleManagement
             m_alphaKeyDownState[9] = Input.GetKeyDown(KeyCode.Alpha9) || Input.GetKeyDown(KeyCode.Keypad9);
         }
 
-        private bool GetAlphaKeyDown(int num)
+        private bool IsShiftKeyPressed()
+        {
+            return m_shiftKeyPressed;
+        }
+
+        private bool IsAlphaKeyDown(int num)
         {
             return m_alphaKeyDownState[num];
         }
 
         private bool GetDeviceByInputDownKeyCode(IVRModuleDeviceStateRW[] deviceStates, out IVRModuleDeviceStateRW deviceState)
         {
-            if (!m_ctrlKeyDownState && GetAlphaKeyDown(0)) { deviceState = deviceStates[0]; return true; }
-            if (!m_ctrlKeyDownState && GetAlphaKeyDown(1)) { deviceState = deviceStates[1]; return true; }
-            if (!m_ctrlKeyDownState && GetAlphaKeyDown(2)) { deviceState = deviceStates[2]; return true; }
-            if (!m_ctrlKeyDownState && GetAlphaKeyDown(3)) { deviceState = deviceStates[3]; return true; }
-            if (!m_ctrlKeyDownState && GetAlphaKeyDown(4)) { deviceState = deviceStates[4]; return true; }
-            if (!m_ctrlKeyDownState && GetAlphaKeyDown(5)) { deviceState = deviceStates[5]; return true; }
-            if (!m_ctrlKeyDownState && GetAlphaKeyDown(6)) { deviceState = deviceStates[6]; return true; }
-            if (!m_ctrlKeyDownState && GetAlphaKeyDown(7)) { deviceState = deviceStates[7]; return true; }
-            if (!m_ctrlKeyDownState && GetAlphaKeyDown(8)) { deviceState = deviceStates[8]; return true; }
-            if (!m_ctrlKeyDownState && GetAlphaKeyDown(9)) { deviceState = deviceStates[9]; return true; }
-            if (m_ctrlKeyDownState && GetAlphaKeyDown(0)) { deviceState = deviceStates[10]; return true; }
-            if (m_ctrlKeyDownState && GetAlphaKeyDown(1)) { deviceState = deviceStates[11]; return true; }
-            if (m_ctrlKeyDownState && GetAlphaKeyDown(2)) { deviceState = deviceStates[12]; return true; }
-            if (m_ctrlKeyDownState && GetAlphaKeyDown(3)) { deviceState = deviceStates[13]; return true; }
-            if (m_ctrlKeyDownState && GetAlphaKeyDown(4)) { deviceState = deviceStates[14]; return true; }
-            if (m_ctrlKeyDownState && GetAlphaKeyDown(5)) { deviceState = deviceStates[15]; return true; }
+            var backQuatePressed = Input.GetKey(KeyCode.BackQuote);
+            if (!backQuatePressed && IsAlphaKeyDown(0)) { deviceState = deviceStates[0]; return true; }
+            if (!backQuatePressed && IsAlphaKeyDown(1)) { deviceState = deviceStates[1]; return true; }
+            if (!backQuatePressed && IsAlphaKeyDown(2)) { deviceState = deviceStates[2]; return true; }
+            if (!backQuatePressed && IsAlphaKeyDown(3)) { deviceState = deviceStates[3]; return true; }
+            if (!backQuatePressed && IsAlphaKeyDown(4)) { deviceState = deviceStates[4]; return true; }
+            if (!backQuatePressed && IsAlphaKeyDown(5)) { deviceState = deviceStates[5]; return true; }
+            if (!backQuatePressed && IsAlphaKeyDown(6)) { deviceState = deviceStates[6]; return true; }
+            if (!backQuatePressed && IsAlphaKeyDown(7)) { deviceState = deviceStates[7]; return true; }
+            if (!backQuatePressed && IsAlphaKeyDown(8)) { deviceState = deviceStates[8]; return true; }
+            if (!backQuatePressed && IsAlphaKeyDown(9)) { deviceState = deviceStates[9]; return true; }
+            if (backQuatePressed && IsAlphaKeyDown(0)) { deviceState = deviceStates[10]; return true; }
+            if (backQuatePressed && IsAlphaKeyDown(1)) { deviceState = deviceStates[11]; return true; }
+            if (backQuatePressed && IsAlphaKeyDown(2)) { deviceState = deviceStates[12]; return true; }
+            if (backQuatePressed && IsAlphaKeyDown(3)) { deviceState = deviceStates[13]; return true; }
+            if (backQuatePressed && IsAlphaKeyDown(4)) { deviceState = deviceStates[14]; return true; }
+            if (backQuatePressed && IsAlphaKeyDown(5)) { deviceState = deviceStates[15]; return true; }
 
             deviceState = null;
             return false;
         }
 
-        private void InitializeDevice(IVRModuleDeviceStateRW deviceState)
+        private void InitializeDevice(IVRModuleDeviceStateRW hmdState, IVRModuleDeviceStateRW deviceState)
         {
             switch (deviceState.deviceIndex)
             {
@@ -253,8 +259,7 @@ namespace HTC.UnityPlugin.VRModuleManagement
                         deviceState.deviceModel = VRModuleDeviceModel.ViveHMD;
 
                         deviceState.isPoseValid = true;
-                        deviceState.position = new Vector3(0f, 1.75f, 0f);
-                        deviceState.rotation = Quaternion.identity;
+                        deviceState.pose = m_initHmdPose;
 
                         break;
                     }
@@ -267,9 +272,9 @@ namespace HTC.UnityPlugin.VRModuleManagement
                         deviceState.renderModelName = deviceState.serialNumber;
                         deviceState.deviceModel = VRModuleDeviceModel.ViveController;
 
+                        var pose = new RigidPose(new Vector3(0.3f, -0.7f, 0.4f), Quaternion.identity);
                         deviceState.isPoseValid = true;
-                        deviceState.position = new Vector3(0.3f, 1.05f, 0.4f);
-                        deviceState.rotation = Quaternion.identity;
+                        deviceState.pose = (hmdState.isConnected ? hmdState.pose : m_initHmdPose) * pose;
                         deviceState.buttonPressed = 0ul;
                         deviceState.buttonTouched = 0ul;
                         deviceState.ResetAxisValues();
@@ -284,9 +289,9 @@ namespace HTC.UnityPlugin.VRModuleManagement
                         deviceState.renderModelName = deviceState.serialNumber;
                         deviceState.deviceModel = VRModuleDeviceModel.ViveController;
 
+                        var pose = new RigidPose(new Vector3(-0.3f, -0.7f, 0.4f), Quaternion.identity);
                         deviceState.isPoseValid = true;
-                        deviceState.position = new Vector3(-0.3f, 1.05f, 0.4f);
-                        deviceState.rotation = Quaternion.identity;
+                        deviceState.pose = (hmdState.isConnected ? hmdState.pose : m_initHmdPose) * pose;
                         deviceState.buttonPressed = 0ul;
                         deviceState.buttonTouched = 0ul;
                         deviceState.ResetAxisValues();
@@ -301,9 +306,9 @@ namespace HTC.UnityPlugin.VRModuleManagement
                         deviceState.renderModelName = deviceState.serialNumber;
                         deviceState.deviceModel = VRModuleDeviceModel.ViveTracker;
 
+                        var pose = new RigidPose(new Vector3(0f, -0.7f, 0.4f), Quaternion.identity);
                         deviceState.isPoseValid = true;
-                        deviceState.position = new Vector3(0f, 1.05f, 0.4f);
-                        deviceState.rotation = Quaternion.identity;
+                        deviceState.pose = (hmdState.isConnected ? hmdState.pose : m_initHmdPose) * pose;
                         deviceState.buttonPressed = 0ul;
                         deviceState.buttonTouched = 0ul;
                         deviceState.ResetAxisValues();
@@ -319,9 +324,47 @@ namespace HTC.UnityPlugin.VRModuleManagement
             var deltaAngle = Time.unscaledDeltaTime * m_rotateSpeed;
             var deltaKeyAngle = Time.unscaledDeltaTime * m_rotateKeySpeed;
 
-            poseEuler.x += -Input.GetAxisRaw("Mouse Y") * deltaAngle;
-            poseEuler.y += Input.GetAxisRaw("Mouse X") * deltaAngle;
+            poseEuler.x = Mathf.Repeat(poseEuler.x + 180f, 360f) - 180f;
 
+            if (!IsShiftKeyPressed())
+            {
+                var pitchDelta = -Input.GetAxisRaw("Mouse Y") * deltaAngle;
+                if (pitchDelta > 0f)
+                {
+                    if (poseEuler.x < 90f && poseEuler.x > -180f)
+                    {
+                        poseEuler.x = Mathf.Min(90f, poseEuler.x + pitchDelta);
+                    }
+                }
+                else if (pitchDelta < 0f)
+                {
+                    if (poseEuler.x < 180f && poseEuler.x > -90f)
+                    {
+                        poseEuler.x = Mathf.Max(-90f, poseEuler.x + pitchDelta);
+                    }
+                }
+
+                poseEuler.y += Input.GetAxisRaw("Mouse X") * deltaAngle;
+            }
+
+            if (Input.GetKey(KeyCode.DownArrow))
+            {
+                if (poseEuler.x < 90f && poseEuler.x > -180f)
+                {
+                    poseEuler.x = Mathf.Min(90f, poseEuler.x + deltaKeyAngle);
+                }
+            }
+
+            if (Input.GetKey(KeyCode.UpArrow))
+            {
+                if (poseEuler.x < 180f && poseEuler.x > -90f)
+                {
+                    poseEuler.x = Mathf.Max(-90f, poseEuler.x - deltaKeyAngle);
+                }
+            }
+
+            if (Input.GetKey(KeyCode.RightArrow)) { poseEuler.y += deltaKeyAngle; }
+            if (Input.GetKey(KeyCode.LeftArrow)) { poseEuler.y -= deltaKeyAngle; }
             if (Input.GetKey(KeyCode.C)) { poseEuler.z += deltaKeyAngle; }
             if (Input.GetKey(KeyCode.Z)) { poseEuler.z -= deltaKeyAngle; }
             if (Input.GetKey(KeyCode.X)) { poseEuler.z = 0f; }
@@ -346,11 +389,27 @@ namespace HTC.UnityPlugin.VRModuleManagement
             var pose = deviceState.pose;
             var poseEuler = pose.rot.eulerAngles;
             var deltaKeyAngle = Time.unscaledDeltaTime * m_rotateKeySpeed;
+            
+            poseEuler.x = Mathf.Repeat(poseEuler.x + 180f, 360f) - 180f;
 
-            if (Input.GetKey(KeyCode.G)) { poseEuler.x += deltaKeyAngle; }
-            if (Input.GetKey(KeyCode.T)) { poseEuler.x -= deltaKeyAngle; }
-            if (Input.GetKey(KeyCode.H)) { poseEuler.y += deltaKeyAngle; }
-            if (Input.GetKey(KeyCode.F)) { poseEuler.y -= deltaKeyAngle; }
+            if (Input.GetKey(KeyCode.K))
+            {
+                if (poseEuler.x < 90f && poseEuler.x > -180f)
+                {
+                    poseEuler.x = Mathf.Min(90f, poseEuler.x + deltaKeyAngle);
+                }
+            }
+
+            if (Input.GetKey(KeyCode.I))
+            {
+                if (poseEuler.x < 180f && poseEuler.x > -90f)
+                {
+                    poseEuler.x = Mathf.Max(-90f, poseEuler.x - deltaKeyAngle);
+                }
+            }
+            
+            if (Input.GetKey(KeyCode.L)) { poseEuler.y += deltaKeyAngle; }
+            if (Input.GetKey(KeyCode.J)) { poseEuler.y -= deltaKeyAngle; }
             if (Input.GetKey(KeyCode.N)) { poseEuler.z += deltaKeyAngle; }
             if (Input.GetKey(KeyCode.V)) { poseEuler.z -= deltaKeyAngle; }
             if (Input.GetKey(KeyCode.B)) { poseEuler.z = 0f; }
@@ -360,12 +419,12 @@ namespace HTC.UnityPlugin.VRModuleManagement
             var deltaMove = Time.unscaledDeltaTime * m_moveSpeed;
             var moveForward = Quaternion.Euler(0f, poseEuler.y, 0f) * Vector3.forward;
             var moveRight = Quaternion.Euler(0f, poseEuler.y, 0f) * Vector3.right;
-            if (Input.GetKey(KeyCode.L)) { pose.pos += moveRight * deltaMove; }
-            if (Input.GetKey(KeyCode.J)) { pose.pos -= moveRight * deltaMove; }
-            if (Input.GetKey(KeyCode.O)) { pose.pos += Vector3.up * deltaMove; }
-            if (Input.GetKey(KeyCode.U)) { pose.pos -= Vector3.up * deltaMove; }
-            if (Input.GetKey(KeyCode.I)) { pose.pos += moveForward * deltaMove; }
-            if (Input.GetKey(KeyCode.K)) { pose.pos -= moveForward * deltaMove; }
+            if (Input.GetKey(KeyCode.H)) { pose.pos += moveRight * deltaMove; }
+            if (Input.GetKey(KeyCode.F)) { pose.pos -= moveRight * deltaMove; }
+            if (Input.GetKey(KeyCode.Y)) { pose.pos += Vector3.up * deltaMove; }
+            if (Input.GetKey(KeyCode.R)) { pose.pos -= Vector3.up * deltaMove; }
+            if (Input.GetKey(KeyCode.T)) { pose.pos += moveForward * deltaMove; }
+            if (Input.GetKey(KeyCode.G)) { pose.pos -= moveForward * deltaMove; }
 
             deviceState.pose = pose;
         }
