@@ -43,14 +43,17 @@ namespace HTC.UnityPlugin.Vive
             public string settingTitle { get { return m_settingTitle; } set { m_settingTitle = value; m_settingTrimedTitle = value.Replace(" ", ""); } }
             public string recommendBtnPostfix = string.Empty;
             public string toolTip = string.Empty;
+            public Func<T> recommendedValueFunc = null;
             public Func<T> currentValueFunc = null;
             public Action<T> setValueFunc = null;
             public T currentValue = default(T);
             public T recommendedValue = default(T);
 
+            public T GetRecommended() { return recommendedValueFunc == null ? recommendedValue : recommendedValueFunc(); }
+
             public bool IsIgnored() { return EditorPrefs.HasKey(ignoreKey); }
 
-            public bool IsUsingRecommendedValue() { return EqualityComparer<T>.Default.Equals(currentValue, recommendedValue); }
+            public bool IsUsingRecommendedValue() { return EqualityComparer<T>.Default.Equals(currentValue, GetRecommended()); }
 
             public void UpdateCurrentValue() { currentValue = currentValueFunc(); }
 
@@ -63,11 +66,11 @@ namespace HTC.UnityPlugin.Vive
                 bool recommendBtnClicked;
                 if (string.IsNullOrEmpty(recommendBtnPostfix))
                 {
-                    recommendBtnClicked = GUILayout.Button(new GUIContent(string.Format(fmtRecommendBtn, recommendedValue), toolTip));
+                    recommendBtnClicked = GUILayout.Button(new GUIContent(string.Format(fmtRecommendBtn, GetRecommended()), toolTip));
                 }
                 else
                 {
-                    recommendBtnClicked = GUILayout.Button(new GUIContent(string.Format(fmtRecommendBtnWithPosefix, recommendedValue, recommendBtnPostfix), toolTip));
+                    recommendBtnClicked = GUILayout.Button(new GUIContent(string.Format(fmtRecommendBtnWithPosefix, GetRecommended(), recommendBtnPostfix), toolTip));
                 }
 
                 if (recommendBtnClicked)
@@ -87,7 +90,7 @@ namespace HTC.UnityPlugin.Vive
 
             public void AcceptRecommendValue()
             {
-                setValueFunc(recommendedValue);
+                setValueFunc(GetRecommended());
             }
 
             public void DoIgnore()
@@ -129,7 +132,7 @@ namespace HTC.UnityPlugin.Vive
             toolTip = VIUSettings.BIND_UI_SWITCH_TOOLTIP + " You can change this option later in Edit -> Preferences... -> VIU Settings.",
             currentValueFunc = () => VIUSettings.enableBindingInterfaceSwitch,
             setValueFunc = (v) => { VIUSettings.enableBindingInterfaceSwitch = v; VIUSettings.EditorSave(); },
-            recommendedValue = 
+            recommendedValueFunc = () =>
 #if VIU_STEAMVR && UNITY_2017_2_OR_NEWER
                 VIUSettings.steamVRSupport || VIUSettings.unityNativeVRSupport
 #elif VIU_STEAMVR && !UNITY_2017_2_OR_NEWER
@@ -148,7 +151,7 @@ namespace HTC.UnityPlugin.Vive
             toolTip = VIUSettings.EX_CAM_UI_SWITCH_TOOLTIP + " You can change this option later in Edit -> Preferences... -> VIU Settings.",
             currentValueFunc = () => VIUSettings.enableExternalCameraSwitch,
             setValueFunc = (v) => { VIUSettings.enableExternalCameraSwitch = v; VIUSettings.EditorSave(); },
-            recommendedValue = 
+            recommendedValueFunc = () =>
 #if VIU_STEAMVR
                 VIUSettings.steamVRSupport
 #else
