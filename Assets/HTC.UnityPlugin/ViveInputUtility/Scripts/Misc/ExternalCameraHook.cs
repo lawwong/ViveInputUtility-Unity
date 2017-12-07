@@ -159,7 +159,7 @@ namespace HTC.UnityPlugin.Vive
         {
             if (m_defaultExCamResolved || VRModule.activeModule != VRModuleActiveEnum.SteamVR || !SteamVR.active)
             {
-                if (Active) { Instance.m_quadViewSwitch = false; }
+                if (Active && (VRModule.activeModule != VRModuleActiveEnum.SteamVR || !SteamVR.active)) { Instance.m_quadViewSwitch = false; }
                 return;
             }
             m_defaultExCamResolved = true;
