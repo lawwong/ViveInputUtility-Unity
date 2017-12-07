@@ -63,6 +63,11 @@ namespace HTC.UnityPlugin.VRModuleManagement
 
         public override void OnDeactivated()
         {
+            if (autoMainCameraTrackingEnabled && Camera.main != null)
+            {
+                RigidPose.SetPose(Camera.main.transform, RigidPose.identity);
+            }
+
             XRSettings.enabled = m_prevXREnabled;
 
             if (onDeactivated != null)
@@ -108,9 +113,7 @@ namespace HTC.UnityPlugin.VRModuleManagement
                 SelectDevice(currState[VRModule.HMD_DEVICE_INDEX]);
             }
 
-            // keyboard/mouse control
-
-            //// handle number key down
+            // select/deselect device
             var keySelectDevice = default(IVRModuleDeviceStateRW);
             if (GetDeviceByInputDownKeyCode(currState, out keySelectDevice))
             {
@@ -146,6 +149,7 @@ namespace HTC.UnityPlugin.VRModuleManagement
                 }
             }
 
+            // control selected device
             var selectedDevice = VRModule.IsValidDeviceIndex(m_selectedDeviceIndex) && currState[m_selectedDeviceIndex].isConnected ? currState[m_selectedDeviceIndex] : null;
             if (selectedDevice != null)
             {
@@ -157,6 +161,7 @@ namespace HTC.UnityPlugin.VRModuleManagement
                 }
             }
 
+            // control camera
             if (currState[VRModule.HMD_DEVICE_INDEX].isConnected)
             {
                 ControlCamera(currState[VRModule.HMD_DEVICE_INDEX]);
@@ -389,7 +394,7 @@ namespace HTC.UnityPlugin.VRModuleManagement
             var pose = deviceState.pose;
             var poseEuler = pose.rot.eulerAngles;
             var deltaKeyAngle = Time.unscaledDeltaTime * m_rotateKeySpeed;
-            
+
             poseEuler.x = Mathf.Repeat(poseEuler.x + 180f, 360f) - 180f;
 
             if (Input.GetKey(KeyCode.K))
@@ -407,7 +412,7 @@ namespace HTC.UnityPlugin.VRModuleManagement
                     poseEuler.x = Mathf.Max(-90f, poseEuler.x - deltaKeyAngle);
                 }
             }
-            
+
             if (Input.GetKey(KeyCode.L)) { poseEuler.y += deltaKeyAngle; }
             if (Input.GetKey(KeyCode.J)) { poseEuler.y -= deltaKeyAngle; }
             if (Input.GetKey(KeyCode.N)) { poseEuler.z += deltaKeyAngle; }
