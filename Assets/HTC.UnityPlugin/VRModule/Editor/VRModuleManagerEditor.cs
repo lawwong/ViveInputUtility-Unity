@@ -27,6 +27,20 @@ namespace HTC.UnityPlugin.VRModuleManagement
 
         private static List<VrSdkInfo> s_supportedSdkInfoList;
 
+        public static readonly bool isSteamVRPluginDetected =
+#if VIU_STEAMVR
+            true;
+#else
+            false;
+#endif
+
+        public static readonly bool isOculusVRPluginDetected =
+#if VIU_OCULUSVR
+            true;
+#else
+            false;
+#endif
+
         static VRModuleManagerEditor()
         {
             s_supportedSdkInfoList = new List<VrSdkInfo>();

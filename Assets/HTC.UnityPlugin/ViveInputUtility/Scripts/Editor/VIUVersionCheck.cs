@@ -1,5 +1,6 @@
 ﻿//========= Copyright 2016-2017, HTC Corporation. All rights reserved. ===========
 
+using HTC.UnityPlugin.VRModuleManagement;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -133,14 +134,9 @@ namespace HTC.UnityPlugin.Vive
             currentValueFunc = () => VIUSettings.enableBindingInterfaceSwitch,
             setValueFunc = (v) => { VIUSettings.enableBindingInterfaceSwitch = v; VIUSettings.EditorSave(); },
             recommendedValueFunc = () =>
-#if VIU_STEAMVR && UNITY_2017_2_OR_NEWER
-                VIUSettings.steamVRSupport || VIUSettings.unityNativeVRSupport
-#elif VIU_STEAMVR && !UNITY_2017_2_OR_NEWER
-                VIUSettings.steamVRSupport
-#elif !VIU_STEAMVR && UNITY_2017_2_OR_NEWER
-                VIUSettings.unityNativeVRSupport
-#else
-                false
+                (VRModuleManagerEditor.isSteamVRPluginDetected && VIUSettings.steamVRSupport)
+#if UNITY_2017_2_OR_NEWER
+                || VIUSettings.unityNativeVRSupport
 #endif
                 ,
             },
@@ -151,13 +147,7 @@ namespace HTC.UnityPlugin.Vive
             toolTip = VIUSettings.EX_CAM_UI_SWITCH_TOOLTIP + " You can change this option later in Edit -> Preferences... -> VIU Settings.",
             currentValueFunc = () => VIUSettings.enableExternalCameraSwitch,
             setValueFunc = (v) => { VIUSettings.enableExternalCameraSwitch = v; VIUSettings.EditorSave(); },
-            recommendedValueFunc = () =>
-#if VIU_STEAMVR
-                VIUSettings.steamVRSupport
-#else
-                false
-#endif
-                ,
+            recommendedValueFunc = () => VRModuleManagerEditor.isSteamVRPluginDetected && VIUSettings.steamVRSupport,
             },
 
 #if !VIU_STEAMVR
