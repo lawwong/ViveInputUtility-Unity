@@ -49,11 +49,11 @@ namespace HTC.UnityPlugin.Vive
         [SerializeField]
         private bool m_oculusVRSupport = OCULUS_VRSUPPORT_DEFAULT_VALUE;
 
-        private bool m_islLoadedFromAsset;
+        private string m_loadedAssetPath;
 
         public static bool isLoaded { get { return s_instance != null; } }
 
-        public static bool isLoadedFromAsset { get { return s_instance == null ? false : s_instance.m_islLoadedFromAsset; } }
+        public static string loadedAssetPath { get { return s_instance == null ? null : s_instance.m_loadedAssetPath; } }
 
         public static bool enableBindingInterfaceSwitch { get { return Instance == null ? ENABLE_BINDING_INTERFACE_SWITCH_DEFAULT_VALUE : s_instance.m_enableBindingInterfaceSwitch; } set { if (Instance != null) { Instance.m_enableBindingInterfaceSwitch = value; } } }
 
@@ -84,7 +84,7 @@ namespace HTC.UnityPlugin.Vive
             }
             else
             {
-                s_instance.m_islLoadedFromAsset = true;
+                s_instance.m_loadedAssetPath = resourcePath;
             }
         }
 
@@ -130,7 +130,7 @@ namespace HTC.UnityPlugin.Vive
             }
             else
             {
-                s_instance.m_islLoadedFromAsset = true;
+                s_instance.m_loadedAssetPath = path;
             }
         }
 
@@ -152,14 +152,12 @@ namespace HTC.UnityPlugin.Vive
             }
         }
 
-        public static void EditorRemove(string path = null)
+        public static void EditorRemoveLoadedAsset()
         {
-            if (string.IsNullOrEmpty(path))
+            if (isLoaded && !string.IsNullOrEmpty(loadedAssetPath))
             {
-                path = assetPath;
+                UnityEditor.AssetDatabase.DeleteAsset(loadedAssetPath);
             }
-
-            UnityEditor.AssetDatabase.DeleteAsset(path);
         }
 
         [UnityEditor.PreferenceItem("VIU Settings")]
@@ -167,7 +165,7 @@ namespace HTC.UnityPlugin.Vive
         {
             if (GUILayout.Button("Reset to Default Settings"))
             {
-                EditorRemove();
+                EditorRemoveLoadedAsset();
             }
             else
             {
