@@ -169,5 +169,19 @@ namespace HTC.UnityPlugin.VRModuleManagement
                 Instance.m_activatedModuleBase.TriggerViveControllerHaptic(deviceIndex, durationMicroSec);
             }
         }
+
+        public static readonly bool isSteamVRPluginDetected =
+#if VIU_STEAMVR
+            true;
+#else
+            false;
+#endif
+
+        public static readonly bool isOculusVRPluginDetected =
+#if VIU_OCULUSVR
+            true;
+#else
+            false;
+#endif
     }
 }
