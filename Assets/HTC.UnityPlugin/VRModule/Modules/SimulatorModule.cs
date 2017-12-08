@@ -30,6 +30,8 @@ namespace HTC.UnityPlugin.VRModuleManagement
         private bool m_prevXREnabled;
         private bool m_autoCamTracking = true;
         private bool m_resetDevices;
+
+        private bool m_enableShiftPadTouch = true;
         private float m_moveSpeed = 1.5f; // meter/second
         private float m_rotateSpeed = 90f; // angle/unit
         private float m_rotateKeySpeed = 90f; // angle/second
@@ -443,12 +445,25 @@ namespace HTC.UnityPlugin.VRModuleManagement
             deviceState.SetButtonPress(VRModuleRawButton.Trigger, leftPressed);
             deviceState.SetButtonTouch(VRModuleRawButton.Trigger, leftPressed);
             deviceState.SetAxisValue(VRModuleRawAxis.Trigger, leftPressed ? 1f : 0f);
+
             deviceState.SetButtonPress(VRModuleRawButton.Grip, midPressed);
             deviceState.SetButtonTouch(VRModuleRawButton.Grip, midPressed);
             deviceState.SetAxisValue(VRModuleRawAxis.CapSenseGrip, midPressed ? 1f : 0f);
+
             deviceState.SetButtonPress(VRModuleRawButton.Touchpad, rightPressed);
-            deviceState.SetButtonTouch(VRModuleRawButton.Touchpad, rightPressed);
-            //deviceState.SetAxisValue(VRModuleRawAxis.Trigger, rightPressed ? 1f : 0f);
+
+            if (m_enableShiftPadTouch && IsShiftKeyPressed())
+            {
+                deviceState.SetButtonTouch(VRModuleRawButton.Touchpad, true);
+                deviceState.SetAxisValue(VRModuleRawAxis.TouchpadX, deviceState.GetAxisValue(VRModuleRawAxis.TouchpadX) + (Input.GetAxisRaw("Mouse X") * 0.1f));
+                deviceState.SetAxisValue(VRModuleRawAxis.TouchpadY, deviceState.GetAxisValue(VRModuleRawAxis.TouchpadY) + (Input.GetAxisRaw("Mouse Y") * 0.1f));
+            }
+            else
+            {
+                deviceState.SetButtonTouch(VRModuleRawButton.Touchpad, rightPressed);
+                deviceState.SetAxisValue(VRModuleRawAxis.TouchpadX, 0f);
+                deviceState.SetAxisValue(VRModuleRawAxis.TouchpadY, 0f);
+            }
         }
     }
 }
