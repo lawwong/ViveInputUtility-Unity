@@ -15,7 +15,6 @@ namespace HTC.UnityPlugin.VRModuleManagement
 {
     public interface ISimulatorVRModule
     {
-        bool autoMainCameraTrackingEnabled { get; set; }
         event Action onActivated;
         event Action onDeactivated;
         event Action<IVRModuleDeviceState[], IVRModuleDeviceStateRW[]> onUpdateDeviceState;
@@ -28,23 +27,11 @@ namespace HTC.UnityPlugin.VRModuleManagement
         private static readonly RigidPose m_initHmdPose = new RigidPose(new Vector3(0f, 1.75f, 0f), Quaternion.identity);
 
         private bool m_prevXREnabled;
-        private bool m_autoCamTracking = true;
         private bool m_resetDevices;
-
-        private bool m_enableShiftPadTouch = true;
-        private float m_moveSpeed = 1.5f; // meter/second
-        private float m_rotateSpeed = 90f; // angle/unit
-        private float m_rotateKeySpeed = 90f; // angle/second
 
         public event Action onActivated;
         public event Action onDeactivated;
         public event Action<IVRModuleDeviceState[], IVRModuleDeviceStateRW[]> onUpdateDeviceState;
-
-        public bool autoMainCameraTrackingEnabled
-        {
-            get { return m_autoCamTracking; }
-            set { m_autoCamTracking = value; }
-        }
 
         public override bool ShouldActiveModule() { return VIUSettings.simulatorSupport; }
 
@@ -65,10 +52,7 @@ namespace HTC.UnityPlugin.VRModuleManagement
 
         public override void OnDeactivated()
         {
-            if (autoMainCameraTrackingEnabled && Camera.main != null)
-            {
-                RigidPose.SetPose(Camera.main.transform, RigidPose.identity);
-            }
+            UpdateMainCamTracking();
 
             XRSettings.enabled = m_prevXREnabled;
 
@@ -174,9 +158,41 @@ namespace HTC.UnityPlugin.VRModuleManagement
                 onUpdateDeviceState(prevState, currState);
             }
 
-            if (autoMainCameraTrackingEnabled && Camera.main != null)
+            UpdateMainCamTracking();
+        }
+
+        private bool m_autoTrackMainCam;
+        private RigidPose m_mainCamStartPose;
+        private void UpdateMainCamTracking()
+        {
+            if (VIUSettings.simulatorAutoTrackMainCamera)
             {
-                RigidPose.SetPose(Camera.main.transform, currState[VRModule.HMD_DEVICE_INDEX].pose);
+                if (!m_autoTrackMainCam)
+                {
+                    m_autoTrackMainCam = true;
+                    m_mainCamStartPose = new RigidPose(Camera.main.transform, true);
+                }
+
+                if (Camera.main != null)
+                {
+                    var hmd = VRModule.GetDeviceState(VRModule.HMD_DEVICE_INDEX);
+                    if (hmd.isConnected)
+                    {
+                        RigidPose.SetPose(Camera.main.transform, hmd.pose);
+                    }
+                }
+            }
+            else
+            {
+                if (m_autoTrackMainCam)
+                {
+                    m_autoTrackMainCam = false;
+
+                    if (Camera.main != null)
+                    {
+                        RigidPose.SetPose(Camera.main.transform, m_mainCamStartPose);
+                    }
+                }
             }
         }
 
@@ -328,8 +344,8 @@ namespace HTC.UnityPlugin.VRModuleManagement
         {
             var pose = deviceState.pose;
             var poseEuler = pose.rot.eulerAngles;
-            var deltaAngle = Time.unscaledDeltaTime * m_rotateSpeed;
-            var deltaKeyAngle = Time.unscaledDeltaTime * m_rotateKeySpeed;
+            var deltaAngle = Time.unscaledDeltaTime * VIUSettings.simulatorMouseRotateSpeed;
+            var deltaKeyAngle = Time.unscaledDeltaTime * VIUSettings.simulatorKeyRotateSpeed;
 
             poseEuler.x = Mathf.Repeat(poseEuler.x + 180f, 360f) - 180f;
 
@@ -378,7 +394,7 @@ namespace HTC.UnityPlugin.VRModuleManagement
 
             pose.rot = Quaternion.Euler(poseEuler);
 
-            var deltaMove = Time.unscaledDeltaTime * m_moveSpeed;
+            var deltaMove = Time.unscaledDeltaTime * VIUSettings.simulatorKeyMoveSpeed;
             var moveForward = Quaternion.Euler(0f, poseEuler.y, 0f) * Vector3.forward;
             var moveRight = Quaternion.Euler(0f, poseEuler.y, 0f) * Vector3.right;
             if (Input.GetKey(KeyCode.D)) { pose.pos += moveRight * deltaMove; }
@@ -395,7 +411,7 @@ namespace HTC.UnityPlugin.VRModuleManagement
         {
             var pose = deviceState.pose;
             var poseEuler = pose.rot.eulerAngles;
-            var deltaKeyAngle = Time.unscaledDeltaTime * m_rotateKeySpeed;
+            var deltaKeyAngle = Time.unscaledDeltaTime * VIUSettings.simulatorKeyRotateSpeed;
 
             poseEuler.x = Mathf.Repeat(poseEuler.x + 180f, 360f) - 180f;
 
@@ -423,7 +439,7 @@ namespace HTC.UnityPlugin.VRModuleManagement
 
             pose.rot = Quaternion.Euler(poseEuler);
 
-            var deltaMove = Time.unscaledDeltaTime * m_moveSpeed;
+            var deltaMove = Time.unscaledDeltaTime * VIUSettings.simulatorKeyMoveSpeed;
             var moveForward = Quaternion.Euler(0f, poseEuler.y, 0f) * Vector3.forward;
             var moveRight = Quaternion.Euler(0f, poseEuler.y, 0f) * Vector3.right;
             if (Input.GetKey(KeyCode.H)) { pose.pos += moveRight * deltaMove; }
@@ -452,7 +468,7 @@ namespace HTC.UnityPlugin.VRModuleManagement
 
             deviceState.SetButtonPress(VRModuleRawButton.Touchpad, rightPressed);
 
-            if (m_enableShiftPadTouch && IsShiftKeyPressed())
+            if (VIUSettings.simulatorPadTouchSwitch && IsShiftKeyPressed())
             {
                 deviceState.SetButtonTouch(VRModuleRawButton.Touchpad, true);
                 deviceState.SetAxisValue(VRModuleRawAxis.TouchpadX, deviceState.GetAxisValue(VRModuleRawAxis.TouchpadX) + (Input.GetAxisRaw("Mouse X") * 0.1f));
