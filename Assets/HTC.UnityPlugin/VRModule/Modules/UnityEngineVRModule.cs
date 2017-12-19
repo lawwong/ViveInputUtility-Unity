@@ -111,7 +111,7 @@ namespace HTC.UnityPlugin.VRModuleManagement
             public static int Index(int i) { return s_ids[i]; }
         }
 #endif
-        public override bool ShouldActiveModule() { return VIUSettings.unityNativeVRSupport && XRSettings.enabled; }
+        public override bool ShouldActiveModule() { return VIUSettings.activateUnityNativeVRModule && XRSettings.enabled; }
 
         public override void Update()
         {

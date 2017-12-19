@@ -33,7 +33,7 @@ namespace HTC.UnityPlugin.VRModuleManagement
         public event Action onDeactivated;
         public event Action<IVRModuleDeviceState[], IVRModuleDeviceStateRW[]> onUpdateDeviceState;
 
-        public override bool ShouldActiveModule() { return VIUSettings.simulatorSupport; }
+        public override bool ShouldActiveModule() { return VIUSettings.activateSimulatorModule; }
 
         public override void OnActivated()
         {
@@ -468,7 +468,7 @@ namespace HTC.UnityPlugin.VRModuleManagement
 
             deviceState.SetButtonPress(VRModuleRawButton.Touchpad, rightPressed);
 
-            if (VIUSettings.simulatorPadTouchSwitch && IsShiftKeyPressed())
+            if (VIUSettings.simulateTrackpadTouch && IsShiftKeyPressed())
             {
                 deviceState.SetButtonTouch(VRModuleRawButton.Touchpad, true);
                 deviceState.SetAxisValue(VRModuleRawAxis.TouchpadX, deviceState.GetAxisValue(VRModuleRawAxis.TouchpadX) + (Input.GetAxisRaw("Mouse X") * 0.1f));

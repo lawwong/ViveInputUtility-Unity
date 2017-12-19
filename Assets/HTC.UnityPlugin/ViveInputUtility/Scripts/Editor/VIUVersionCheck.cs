@@ -125,160 +125,162 @@ namespace HTC.UnityPlugin.Vive
 
         private static bool toggleSkipThisVersion = false;
 
-        private static IPropSetting[] s_settings = new IPropSetting[]
-        {
-            new PropSetting<bool>()
-            {
-            settingTitle = "Binding Interface Switch",
-            toolTip = VIUSettings.BIND_UI_SWITCH_TOOLTIP + " You can change this option later in Edit -> Preferences... -> VIU Settings.",
-            currentValueFunc = () => VIUSettings.enableBindingInterfaceSwitch,
-            setValueFunc = (v) => { VIUSettings.enableBindingInterfaceSwitch = v; VIUSettings.EditorSave(); },
-            recommendedValueFunc = () =>
-                (VRModule.isSteamVRPluginDetected && VIUSettings.steamVRSupport)
-#if UNITY_2017_2_OR_NEWER
-                || VIUSettings.unityNativeVRSupport
-#endif
-                ,
-            },
-
-            new PropSetting<bool>()
-            {
-            settingTitle = "External Camera Switch",
-            toolTip = VIUSettings.EX_CAM_UI_SWITCH_TOOLTIP + " You can change this option later in Edit -> Preferences... -> VIU Settings.",
-            currentValueFunc = () => VIUSettings.enableExternalCameraSwitch,
-            setValueFunc = (v) => { VIUSettings.enableExternalCameraSwitch = v; VIUSettings.EditorSave(); },
-            recommendedValueFunc = () => VRModule.isSteamVRPluginDetected && VIUSettings.steamVRSupport,
-            },
-
-#if !VIU_STEAMVR
-
-            new PropSetting<bool>()
-            {
-            settingTitle = "Show Unity Splashscreen",
-#if (UNITY_5_4 || UNITY_5_3 || UNITY_5_2 || UNITY_5_1 || UNITY_5_0)
-			currentValueFunc = () => PlayerSettings.showUnitySplashScreen,
-            setValueFunc = (v) => PlayerSettings.showUnitySplashScreen = v,
-#else
-			currentValueFunc = () => PlayerSettings.SplashScreen.show,
-            setValueFunc = (v) => PlayerSettings.SplashScreen.show = v,
-#endif
-            recommendedValue = false,
-            },
-
-            new PropSetting<bool>()
-            {
-            settingTitle = "Default Is Fullscreen",
-            currentValueFunc = () => PlayerSettings.defaultIsFullScreen,
-            setValueFunc = (v) => PlayerSettings.defaultIsFullScreen = v,
-            recommendedValue = false,
-            },
-
-            new PropSetting<Vector2>()
-            {
-            settingTitle = "Default Screen Size",
-            currentValueFunc = () => new Vector2(PlayerSettings.defaultScreenWidth, PlayerSettings.defaultScreenHeight),
-            setValueFunc = (v) => { PlayerSettings.defaultScreenWidth = (int)v.x; PlayerSettings.defaultScreenHeight = (int)v.y; },
-            recommendedValue = new Vector2(1024f, 768f),
-            },
-
-            new PropSetting<bool>()
-            {
-            settingTitle = "Run In Background",
-            currentValueFunc = () => PlayerSettings.runInBackground,
-            setValueFunc = (v) => PlayerSettings.runInBackground = v,
-            recommendedValue = true,
-            },
-
-            new PropSetting<ResolutionDialogSetting>()
-            {
-            settingTitle = "Display Resolution Dialog",
-            currentValueFunc = () => PlayerSettings.displayResolutionDialog,
-            setValueFunc = (v) => PlayerSettings.displayResolutionDialog = v,
-            recommendedValue = ResolutionDialogSetting.HiddenByDefault,
-            },
-
-            new PropSetting<bool>()
-            {
-            settingTitle = "Resizable Window",
-            currentValueFunc = () => PlayerSettings.resizableWindow,
-            setValueFunc = (v) => PlayerSettings.resizableWindow = v,
-            recommendedValue = true,
-            },
-
-            new PropSetting<D3D11FullscreenMode>()
-            {
-            settingTitle = "D3D11 Fullscreen Mode",
-            currentValueFunc = () => PlayerSettings.d3d11FullscreenMode,
-            setValueFunc = (v) => PlayerSettings.d3d11FullscreenMode = v,
-            recommendedValue = D3D11FullscreenMode.FullscreenWindow,
-            },
-
-            new PropSetting<bool>()
-            {
-            settingTitle = "Visible In Background",
-            currentValueFunc = () => PlayerSettings.visibleInBackground,
-            setValueFunc = (v) => PlayerSettings.visibleInBackground = v,
-            recommendedValue = true,
-            },
-
-#if (UNITY_5_4 || UNITY_5_3 || UNITY_5_2 || UNITY_5_1 || UNITY_5_0)
-            new PropSetting<RenderingPath>()
-            {
-            settingTitle = "Rendering Path",
-            recommendBtnPostfix = "required for MSAA",
-            currentValueFunc = () => PlayerSettings.renderingPath,
-            setValueFunc = (v) => PlayerSettings.renderingPath = v,
-            recommendedValue = RenderingPath.Forward,
-            },
-#endif
-
-            new PropSetting<ColorSpace>()
-            {
-            settingTitle = "Color Space",
-            recommendBtnPostfix = "requires reloading scene",
-            currentValueFunc = () => PlayerSettings.colorSpace,
-            setValueFunc = (v) => PlayerSettings.colorSpace = v,
-            recommendedValue = ColorSpace.Linear,
-            },
-
-#if !(UNITY_5_3 || UNITY_5_2 || UNITY_5_1 || UNITY_5_0)
-            new PropSetting<bool>()
-            {
-            settingTitle = "GPU Skinning",
-            currentValueFunc = () => PlayerSettings.gpuSkinning ,
-            setValueFunc = (v) => PlayerSettings.gpuSkinning  = v,
-            recommendedValue = true,
-            },
-#endif
-
-#if (UNITY_5_3 || UNITY_5_2 || UNITY_5_1 || UNITY_5_0)
-            new PropSetting<bool>()
-            {
-            settingTitle = "Stereoscopic Rendering",
-            currentValueFunc = () => PlayerSettings.stereoscopic3D,
-            setValueFunc = (v) => PlayerSettings.stereoscopic3D = v,
-            recommendedValue = false,
-            },
-#endif
-
-#if UNITY_STANDALONE && (VIU_OCULUS || UNITY_5_5_OR_NEWER)
-            new PropSetting<bool>()
-            {
-            settingTitle = "Virtual Reality Support",
-            currentValueFunc = () => PlayerSettings.virtualRealitySupported,
-            setValueFunc = (v) => PlayerSettings.virtualRealitySupported = v,
-            recommendedValue = true,
-            },
-#endif
-
-#endif // !VIU_STEAMVR
-        };
-
+        private static IPropSetting[] s_settings;
         private Texture2D viuLogo;
 
         static VIUVersionCheck()
         {
             EditorApplication.update += CheckVersionAndSettings;
+        }
+
+        private static void InitializeSettins()
+        {
+            if (s_settings != null) { return; }
+            s_settings = new IPropSetting[]
+            {
+                new PropSetting<bool>()
+                {
+                settingTitle = "Binding Interface Switch",
+                toolTip = VIUSettings.BIND_UI_SWITCH_TOOLTIP + " You can change this option later in Edit -> Preferences... -> VIU Settings.",
+                currentValueFunc = () => VIUSettings.enableBindingInterfaceSwitch,
+                setValueFunc = v => { VIUSettings.enableBindingInterfaceSwitch = v; },
+                recommendedValueFunc = () => VIUSettingsEditor.supportOpenVR,
+                },
+
+                new PropSetting<bool>()
+                {
+                settingTitle = "External Camera Switch",
+                toolTip = VIUSettings.EX_CAM_UI_SWITCH_TOOLTIP + " You can change this option later in Edit -> Preferences... -> VIU Settings.",
+                currentValueFunc = () => VIUSettings.enableExternalCameraSwitch,
+                setValueFunc = v => { VIUSettings.enableExternalCameraSwitch = v; },
+                recommendedValue = VRModule.isSteamVRPluginDetected && VIUSettings.activateSteamVRModule,
+                },
+
+#if !VIU_STEAMVR
+                new PropSetting<bool>()
+                {
+                settingTitle = "Show Unity Splashscreen",
+    #if (UNITY_5_4 || UNITY_5_3 || UNITY_5_2 || UNITY_5_1 || UNITY_5_0)
+			    currentValueFunc = () => PlayerSettings.showUnitySplashScreen,
+                setValueFunc = v => PlayerSettings.showUnitySplashScreen = v,
+    #else
+			    currentValueFunc = () => PlayerSettings.SplashScreen.show,
+                setValueFunc = v => PlayerSettings.SplashScreen.show = v,
+    #endif
+                recommendedValue = false,
+                },
+
+                new PropSetting<bool>()
+                {
+                settingTitle = "Default Is Fullscreen",
+                currentValueFunc = () => PlayerSettings.defaultIsFullScreen,
+                setValueFunc = v => PlayerSettings.defaultIsFullScreen = v,
+                recommendedValue = false,
+                },
+
+                new PropSetting<Vector2>()
+                {
+                settingTitle = "Default Screen Size",
+                currentValueFunc = () => new Vector2(PlayerSettings.defaultScreenWidth, PlayerSettings.defaultScreenHeight),
+                setValueFunc = v => { PlayerSettings.defaultScreenWidth = (int)v.x; PlayerSettings.defaultScreenHeight = (int)v.y; },
+                recommendedValue = new Vector2(1024f, 768f),
+                },
+
+                new PropSetting<bool>()
+                {
+                settingTitle = "Run In Background",
+                currentValueFunc = () => PlayerSettings.runInBackground,
+                setValueFunc = v => PlayerSettings.runInBackground = v,
+                recommendedValue = true,
+                },
+
+                new PropSetting<ResolutionDialogSetting>()
+                {
+                settingTitle = "Display Resolution Dialog",
+                currentValueFunc = () => PlayerSettings.displayResolutionDialog,
+                setValueFunc = v => PlayerSettings.displayResolutionDialog = v,
+                recommendedValue = ResolutionDialogSetting.HiddenByDefault,
+                },
+
+                new PropSetting<bool>()
+                {
+                settingTitle = "Resizable Window",
+                currentValueFunc = () => PlayerSettings.resizableWindow,
+                setValueFunc = v => PlayerSettings.resizableWindow = v,
+                recommendedValue = true,
+                },
+
+                new PropSetting<D3D11FullscreenMode>()
+                {
+                settingTitle = "D3D11 Fullscreen Mode",
+                currentValueFunc = () => PlayerSettings.d3d11FullscreenMode,
+                setValueFunc = v => PlayerSettings.d3d11FullscreenMode = v,
+                recommendedValue = D3D11FullscreenMode.FullscreenWindow,
+                },
+
+                new PropSetting<bool>()
+                {
+                settingTitle = "Visible In Background",
+                currentValueFunc = () => PlayerSettings.visibleInBackground,
+                setValueFunc = v => PlayerSettings.visibleInBackground = v,
+                recommendedValue = true,
+                },
+
+    #if (UNITY_5_4 || UNITY_5_3 || UNITY_5_2 || UNITY_5_1 || UNITY_5_0)
+                new PropSetting<RenderingPath>()
+                {
+                settingTitle = "Rendering Path",
+                recommendBtnPostfix = "required for MSAA",
+                currentValueFunc = () => PlayerSettings.renderingPath,
+                setValueFunc = v => PlayerSettings.renderingPath = v,
+                recommendedValue = RenderingPath.Forward,
+                },
+    #endif
+
+                new PropSetting<ColorSpace>()
+                {
+                settingTitle = "Color Space",
+                recommendBtnPostfix = "requires reloading scene",
+                currentValueFunc = () => PlayerSettings.colorSpace,
+                setValueFunc = v => PlayerSettings.colorSpace = v,
+                recommendedValue = ColorSpace.Linear,
+                },
+
+    #if !(UNITY_5_3 || UNITY_5_2 || UNITY_5_1 || UNITY_5_0)
+                new PropSetting<bool>()
+                {
+                settingTitle = "GPU Skinning",
+                currentValueFunc = () => PlayerSettings.gpuSkinning ,
+                setValueFunc = v => PlayerSettings.gpuSkinning  = v,
+                recommendedValue = true,
+                },
+    #endif
+
+    #if (UNITY_5_3 || UNITY_5_2 || UNITY_5_1 || UNITY_5_0)
+                new PropSetting<bool>()
+                {
+                settingTitle = "Stereoscopic Rendering",
+                currentValueFunc = () => PlayerSettings.stereoscopic3D,
+                setValueFunc = v => PlayerSettings.stereoscopic3D = v,
+                recommendedValue = false,
+                },
+    #endif
+
+    #if UNITY_STANDALONE && (VIU_OCULUS || UNITY_5_5_OR_NEWER)
+                new PropSetting<bool>()
+                {
+                settingTitle = "Vive Support",
+                currentValueFunc = () => VIUSettingsEditor.supportOpenVR,
+                setValueFunc = v =>
+                {
+                    VIUSettingsEditor.supportOpenVR = v;
+                    VIUSettingsEditor.EnabledDevices.ApplyChanges();
+                },
+                recommendedValue = true,
+                },
+    #endif
+#endif // !VIU_STEAMVR
+           };
         }
 
         // check vive input utility version on github
@@ -289,6 +291,8 @@ namespace HTC.UnityPlugin.Vive
                 EditorApplication.update -= CheckVersionAndSettings;
                 return;
             }
+
+            InitializeSettins();
 
             if (string.IsNullOrEmpty(editorPrefsPrefix))
             {
