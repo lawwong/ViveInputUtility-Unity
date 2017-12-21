@@ -160,14 +160,14 @@ namespace HTC.UnityPlugin.Vive
                 new PropSetting<bool>()
                 {
                 settingTitle = "Show Unity Splashscreen",
-    #if (UNITY_5_4 || UNITY_5_3 || UNITY_5_2 || UNITY_5_1 || UNITY_5_0)
+    #if (UNITY_5_3 || UNITY_5_4)
 			    currentValueFunc = () => PlayerSettings.showUnitySplashScreen,
                 setValueFunc = v => PlayerSettings.showUnitySplashScreen = v,
     #else
 			    currentValueFunc = () => PlayerSettings.SplashScreen.show,
                 setValueFunc = v => PlayerSettings.SplashScreen.show = v,
     #endif
-                recommendedValue = false,
+                recommendedValueFunc = () => !UnityEditorInternal.InternalEditorUtility.HasPro(),
                 },
 
                 new PropSetting<bool>()

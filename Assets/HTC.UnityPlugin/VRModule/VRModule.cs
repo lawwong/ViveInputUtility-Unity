@@ -74,14 +74,6 @@ namespace HTC.UnityPlugin.VRModuleManagement
             }
         }
 
-        public static SimulatorVRModule simulateModule
-        {
-            get
-            {
-                return Instance == null ? null : Instance.m_modules[(int)VRModuleActiveEnum.Simulator] as SimulatorVRModule;
-            }
-        }
-
         public static IVRModuleDeviceState defaultDeviceState
         {
             get
@@ -161,6 +153,8 @@ namespace HTC.UnityPlugin.VRModuleManagement
                 }
             }
         }
+
+        public static ISimulatorVRModule Simulator { get { return s_simulator; } }
 
         public static void TriggerViveControllerHaptic(uint deviceIndex, ushort durationMicroSec = 500)
         {

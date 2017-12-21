@@ -10,17 +10,18 @@ namespace HTC.UnityPlugin.Vive
 
         public const string BIND_UI_SWITCH_TOOLTIP = "When enabled, pressing RightShift + B to open the binding interface in play mode.";
         public const string EX_CAM_UI_SWITCH_TOOLTIP = "When enabled, pressing RightShift + M to toggle the quad view while external camera config file exist.";
-        public const string SIMULATE_TRACKPAD_TOUCH_TOOLTIP = "Use Shift key to lock rotation and simulate pad touch";
+        public const string SIMULATE_TRACKPAD_TOUCH_TOOLTIP = "Hold Shift key and move the mouse to simulate trackpad touching event";
         public const string SIMULATOR_KEY_MOVE_SPEED_TOOLTIP = "W/A/S/D";
         public const string SIMULATOR_KEY_ROTATE_SPEED_TOOLTIP = "Arrow Up/Down/Left/Right";
 
         public const bool ENABLE_BINDING_INTERFACE_SWITCH_DEFAULT_VALUE = false;
         public const bool ENABLE_EXTERNAL_CAMERA_SWITCH_DEFAULT_VALUE = false;
-        public const bool ACTIVATE_SIMULATOR_MODULE_DEFAULT_VALUE = false;
+        public const bool ACTIVATE_SIMULATOR_MODULE_DEFAULT_VALUE = true;
         public const bool ACTIVATE_UNITY_NATIVE_VR_MODULE_DEFAULT_VALUE = true;
         public const bool ACTIVATE_STEAM_VR_MODULE_DEFAULT_VALUE = true;
         public const bool ACTIVATE_OCULUS_VR_MODULE_DEFAULT_VALUE = true;
         public const bool SIMULATOR_AUTO_TRACK_MAIN_CAMERA_DEFAULT_VALUE = true;
+        public const bool ENABLE_SIMULATOR_KEYBOARD_MOUSE_CONTROL_VALUE = true;
         public const bool SIMULATE_TRACKPAD_TOUCH_DEFAULT_VALUE = true;
         public const float SIMULATOR_KEY_MOVE_SPEED_DEFAULT_VALUE = 1.5f;
         public const float SIMULATOR_MOUSE_ROTATE_SPEED_DEFAULT_VALUE = 90f;
@@ -38,6 +39,8 @@ namespace HTC.UnityPlugin.Vive
         private bool m_activateSteamVRModule = ACTIVATE_STEAM_VR_MODULE_DEFAULT_VALUE;
         [SerializeField]
         private bool m_activateOculusVRModule = ACTIVATE_OCULUS_VR_MODULE_DEFAULT_VALUE;
+        [SerializeField]
+        private bool m_enableSimulatorKeyboardMouseControl = ENABLE_SIMULATOR_KEYBOARD_MOUSE_CONTROL_VALUE;
         [SerializeField]
         private bool m_simulatorAutoTrackMainCamera = SIMULATOR_AUTO_TRACK_MAIN_CAMERA_DEFAULT_VALUE;
         [SerializeField, Tooltip(SIMULATE_TRACKPAD_TOUCH_TOOLTIP)]
@@ -60,6 +63,8 @@ namespace HTC.UnityPlugin.Vive
         public static bool activateSteamVRModule { get { return Instance == null ? ACTIVATE_STEAM_VR_MODULE_DEFAULT_VALUE : s_instance.m_activateSteamVRModule; } set { if (Instance != null) { Instance.m_activateSteamVRModule = value; } } }
 
         public static bool activateOculusVRModule { get { return Instance == null ? ACTIVATE_OCULUS_VR_MODULE_DEFAULT_VALUE : s_instance.m_activateOculusVRModule; } set { if (Instance != null) { Instance.m_activateOculusVRModule = value; } } }
+
+        public static bool enableSimulatorKeyboardMouseControl { get { return Instance == null ? ENABLE_SIMULATOR_KEYBOARD_MOUSE_CONTROL_VALUE : s_instance.m_enableSimulatorKeyboardMouseControl; } set { if (Instance != null) { Instance.m_enableSimulatorKeyboardMouseControl = value; } } }
 
         public static bool simulatorAutoTrackMainCamera { get { return Instance == null ? SIMULATOR_AUTO_TRACK_MAIN_CAMERA_DEFAULT_VALUE : s_instance.m_simulatorAutoTrackMainCamera; } set { if (Instance != null) { Instance.m_simulatorAutoTrackMainCamera = value; } } }
 
@@ -138,7 +143,7 @@ namespace HTC.UnityPlugin.Vive
             {
                 path = defaultAssetPath;
             }
-            
+
             UnityEditor.AssetDatabase.CreateAsset(Instance, path);
 #endif
         }

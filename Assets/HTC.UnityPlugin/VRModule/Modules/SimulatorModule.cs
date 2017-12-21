@@ -17,11 +17,13 @@ namespace HTC.UnityPlugin.VRModuleManagement
     {
         event Action onActivated;
         event Action onDeactivated;
-        event Action<IVRModuleDeviceState[], IVRModuleDeviceStateRW[]> onUpdateDeviceState;
+        event SimulatorVRModule.UpdateDeviceStateHandler onUpdateDeviceState;
     }
 
     public class SimulatorVRModule : VRModule.ModuleBase, ISimulatorVRModule
     {
+        public delegate void UpdateDeviceStateHandler(IVRModuleDeviceState[] prevState, IVRModuleDeviceStateRW[] currState);
+
         private const uint RIGHT_INDEX = 1;
         private const uint LEFT_INDEX = 2;
         private static readonly RigidPose m_initHmdPose = new RigidPose(new Vector3(0f, 1.75f, 0f), Quaternion.identity);
@@ -31,7 +33,7 @@ namespace HTC.UnityPlugin.VRModuleManagement
 
         public event Action onActivated;
         public event Action onDeactivated;
-        public event Action<IVRModuleDeviceState[], IVRModuleDeviceStateRW[]> onUpdateDeviceState;
+        public event UpdateDeviceStateHandler onUpdateDeviceState;
 
         public override bool ShouldActiveModule() { return VIUSettings.activateSimulatorModule; }
 
@@ -68,89 +70,99 @@ namespace HTC.UnityPlugin.VRModuleManagement
 
         public override void Update()
         {
-            UpdateAlphaKeyDown();
+            if (VIUSettings.enableSimulatorKeyboardMouseControl)
+            {
+                UpdateAlphaKeyDown();
+            }
         }
 
         public override void UpdateDeviceState(IVRModuleDeviceState[] prevState, IVRModuleDeviceStateRW[] currState)
         {
-            // Reset to default state
-            if (m_resetDevices)
+            if (VIUSettings.enableSimulatorKeyboardMouseControl)
             {
-                m_resetDevices = false;
-
-                foreach (var state in currState)
+                // Reset to default state
+                if (m_resetDevices)
                 {
-                    switch (state.deviceIndex)
+                    m_resetDevices = false;
+
+                    foreach (var state in currState)
                     {
-                        case VRModule.HMD_DEVICE_INDEX:
-                        case RIGHT_INDEX:
-                        case LEFT_INDEX:
-                            InitializeDevice(currState[VRModule.HMD_DEVICE_INDEX], state);
-                            break;
-                        default:
-                            if (state.isConnected)
+                        switch (state.deviceIndex)
+                        {
+                            case VRModule.HMD_DEVICE_INDEX:
+                            case RIGHT_INDEX:
+                            case LEFT_INDEX:
+                                InitializeDevice(currState[VRModule.HMD_DEVICE_INDEX], state);
+                                break;
+                            default:
+                                if (state.isConnected)
+                                {
+                                    state.Reset();
+                                }
+                                break;
+                        }
+                    }
+
+                    SelectDevice(currState[VRModule.HMD_DEVICE_INDEX]);
+                }
+
+                // select/deselect device
+                var keySelectDevice = default(IVRModuleDeviceStateRW);
+                if (GetDeviceByInputDownKeyCode(currState, out keySelectDevice))
+                {
+                    if (IsShiftKeyPressed())
+                    {
+                        if (keySelectDevice.isConnected && keySelectDevice.deviceIndex != VRModule.HMD_DEVICE_INDEX)
+                        {
+                            if (IsSelectedDevice(keySelectDevice))
                             {
-                                state.Reset();
+                                DeselectDevice();
                             }
-                            break;
-                    }
-                }
 
-                SelectDevice(currState[VRModule.HMD_DEVICE_INDEX]);
-            }
-
-            // select/deselect device
-            var keySelectDevice = default(IVRModuleDeviceStateRW);
-            if (GetDeviceByInputDownKeyCode(currState, out keySelectDevice))
-            {
-                if (IsShiftKeyPressed())
-                {
-                    if (keySelectDevice.isConnected && keySelectDevice.deviceIndex != VRModule.HMD_DEVICE_INDEX)
-                    {
-                        if (IsSelectedDevice(keySelectDevice))
-                        {
-                            DeselectDevice();
+                            keySelectDevice.Reset();
                         }
-
-                        keySelectDevice.Reset();
-                    }
-                }
-                else
-                {
-                    if (!IsSelectedDevice(keySelectDevice))
-                    {
-                        // select
-                        if (!keySelectDevice.isConnected)
-                        {
-                            InitializeDevice(currState[VRModule.HMD_DEVICE_INDEX], keySelectDevice);
-                        }
-
-                        SelectDevice(keySelectDevice);
                     }
                     else
                     {
-                        // deselect
-                        DeselectDevice();
+                        if (!IsSelectedDevice(keySelectDevice))
+                        {
+                            // select
+                            if (!keySelectDevice.isConnected)
+                            {
+                                InitializeDevice(currState[VRModule.HMD_DEVICE_INDEX], keySelectDevice);
+                            }
+
+                            SelectDevice(keySelectDevice);
+                        }
+                        else
+                        {
+                            // deselect
+                            DeselectDevice();
+                        }
                     }
                 }
-            }
 
-            // control selected device
-            var selectedDevice = VRModule.IsValidDeviceIndex(m_selectedDeviceIndex) && currState[m_selectedDeviceIndex].isConnected ? currState[m_selectedDeviceIndex] : null;
-            if (selectedDevice != null)
-            {
-                ControlDevice(selectedDevice);
-
-                if (selectedDevice.deviceClass != VRModuleDeviceClass.HMD)
+                // control selected device
+                var selectedDevice = VRModule.IsValidDeviceIndex(m_selectedDeviceIndex) && currState[m_selectedDeviceIndex].isConnected ? currState[m_selectedDeviceIndex] : null;
+                if (selectedDevice != null)
                 {
-                    HandleDeviceInput(selectedDevice);
+                    ControlDevice(selectedDevice);
+
+                    if (selectedDevice.deviceClass != VRModuleDeviceClass.HMD)
+                    {
+                        HandleDeviceInput(selectedDevice);
+                    }
+                }
+
+                // control camera
+                if (currState[VRModule.HMD_DEVICE_INDEX].isConnected)
+                {
+                    ControlCamera(currState[VRModule.HMD_DEVICE_INDEX]);
                 }
             }
-
-            // control camera
-            if (currState[VRModule.HMD_DEVICE_INDEX].isConnected)
+            else if (IsDeviceSelected())
             {
-                ControlCamera(currState[VRModule.HMD_DEVICE_INDEX]);
+                DeselectDevice();
             }
 
             if (onUpdateDeviceState != null)
@@ -200,6 +212,11 @@ namespace HTC.UnityPlugin.VRModuleManagement
         private bool IsSelectedDevice(IVRModuleDeviceStateRW state)
         {
             return m_selectedDeviceIndex == state.deviceIndex;
+        }
+
+        private bool IsDeviceSelected()
+        {
+            return VRModule.IsValidDeviceIndex(m_selectedDeviceIndex);
         }
 
         private void SelectDevice(IVRModuleDeviceStateRW state)

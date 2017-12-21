@@ -211,26 +211,29 @@ namespace HTC.UnityPlugin.Vive
 
             EditorGUI.BeginChangeCheck();
 
-            VIUSettings.enableBindingInterfaceSwitch = EditorGUILayout.Toggle(new GUIContent("Enable Binding Interface Switch", VIUSettings.BIND_UI_SWITCH_TOOLTIP), VIUSettings.enableBindingInterfaceSwitch);
-            VIUSettings.enableExternalCameraSwitch = EditorGUILayout.Toggle(new GUIContent("Enable External Camera Switch", VIUSettings.EX_CAM_UI_SWITCH_TOOLTIP), VIUSettings.enableExternalCameraSwitch);
+            VIUSettings.enableBindingInterfaceSwitch = EditorGUILayout.ToggleLeft(new GUIContent("Enable Binding Interface Switch", VIUSettings.BIND_UI_SWITCH_TOOLTIP), VIUSettings.enableBindingInterfaceSwitch);
+            VIUSettings.enableExternalCameraSwitch = EditorGUILayout.ToggleLeft(new GUIContent("Enable External Camera Switch", VIUSettings.EX_CAM_UI_SWITCH_TOOLTIP), VIUSettings.enableExternalCameraSwitch);
 
             EditorGUILayout.Space();
 
             // simulator
             EditorGUILayout.LabelField("Supported devices", s_boldStyle);
 
-            EditorGUI.indentLevel++;
-
             supportSimulatedDevice = EditorGUILayout.ToggleLeft(new GUIContent("Simulated Device", "If checked, the simulator will activated automatically if no other valid VR devices found."), supportSimulatedDevice);
 
             if (supportSimulatedDevice)
             {
                 EditorGUI.indentLevel++;
-                VIUSettings.simulatorAutoTrackMainCamera = EditorGUILayout.Toggle(new GUIContent("Auto Main Camera Tracking"), VIUSettings.simulatorAutoTrackMainCamera);
-                VIUSettings.simulateTrackpadTouch = EditorGUILayout.Toggle(new GUIContent("Simulate Trackpad Touch", VIUSettings.SIMULATE_TRACKPAD_TOUCH_TOOLTIP), VIUSettings.simulateTrackpadTouch);
-                VIUSettings.simulatorKeyMoveSpeed = EditorGUILayout.DelayedFloatField(new GUIContent("Keyboard Move Speed", VIUSettings.SIMULATOR_KEY_MOVE_SPEED_TOOLTIP), VIUSettings.simulatorKeyMoveSpeed);
-                VIUSettings.simulatorKeyRotateSpeed = EditorGUILayout.DelayedFloatField(new GUIContent("Keyboard Rotate Speed", VIUSettings.SIMULATOR_KEY_ROTATE_SPEED_TOOLTIP), VIUSettings.simulatorKeyRotateSpeed);
-                VIUSettings.simulatorMouseRotateSpeed = EditorGUILayout.DelayedFloatField(new GUIContent("Mouse Rotate Speed"), VIUSettings.simulatorMouseRotateSpeed);
+                VIUSettings.simulatorAutoTrackMainCamera = EditorGUILayout.ToggleLeft(new GUIContent("Auto Main Camera Tracking"), VIUSettings.simulatorAutoTrackMainCamera);
+                if (VIUSettings.enableSimulatorKeyboardMouseControl = EditorGUILayout.ToggleLeft(new GUIContent("Enable Keyboard-Mouse Control", "You can also handle VRModule.Simulator.onUpdateDeviceState by your self."), VIUSettings.enableSimulatorKeyboardMouseControl))
+                {
+                    EditorGUI.indentLevel++;
+                    VIUSettings.simulateTrackpadTouch = EditorGUILayout.Toggle(new GUIContent("Simulate Trackpad Touch", VIUSettings.SIMULATE_TRACKPAD_TOUCH_TOOLTIP), VIUSettings.simulateTrackpadTouch);
+                    VIUSettings.simulatorKeyMoveSpeed = EditorGUILayout.DelayedFloatField(new GUIContent("Keyboard Move Speed", VIUSettings.SIMULATOR_KEY_MOVE_SPEED_TOOLTIP), VIUSettings.simulatorKeyMoveSpeed);
+                    VIUSettings.simulatorKeyRotateSpeed = EditorGUILayout.DelayedFloatField(new GUIContent("Keyboard Rotate Speed", VIUSettings.SIMULATOR_KEY_ROTATE_SPEED_TOOLTIP), VIUSettings.simulatorKeyRotateSpeed);
+                    VIUSettings.simulatorMouseRotateSpeed = EditorGUILayout.DelayedFloatField(new GUIContent("Mouse Rotate Speed"), VIUSettings.simulatorMouseRotateSpeed);
+                    EditorGUI.indentLevel--;
+                }
                 EditorGUI.indentLevel--;
             }
 
@@ -298,8 +301,6 @@ namespace HTC.UnityPlugin.Vive
                     VIUSettings.CreateAsset();
                 }
             }
-
-            EditorGUI.indentLevel++;
 
             //GUILayout.BeginHorizontal();
             //GUILayout.FlexibleSpace();
