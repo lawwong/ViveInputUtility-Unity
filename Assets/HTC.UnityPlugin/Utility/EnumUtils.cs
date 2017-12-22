@@ -20,46 +20,51 @@ namespace HTC.UnityPlugin.Utility
         // public enum SomeEnum
         // {
         //     Invalid = -1,
+        //     [OverrideEnumDisplayedName("*aaa")]
         //     AAA,
         //     BBB,
         //     zzz = -2,
         //     CCC = 35,
+        //     [OverrideEnumDisplayedName("-GGG-")]
+        //     ggg,
         //     Default = 0,
         //     EEE,
         //     FFF,
         // }
         // 
-        // EnumDisplayInfo for typeof(SomeEnum) will be:
+        // EnumUtils.EnumDisplayInfo(typeof(SomeEnum)) will be:
         //
         // rawNames | rawValues
-        // ---------------------
-        // AAA      | 0
-        // Default  | 0
-        // EEE      | 1
-        // BBB      | 1
-        // FFF      | 2
-        // CCC      | 35
-        // zzz      | -2
-        // Invalid  | -1
-        // 
+        // --------------------
+        // AAA      | 0        
+        // Default  | 0        
+        // EEE      | 1        
+        // BBB      | 1        
+        // FFF      | 2        
+        // CCC      | 35       
+        // ggg      | 36       
+        // zzz      | -2       
+        // Invalid  | -1       
+        //
         // displayedNames | displayedRawNames | displayedValues
-        // -----------------------------------------------------
-        // Invalid        | Invalid           | -1
-        // AAA            | AAA               | 0
-        // BBB            | BBB               | 1
-        // zzz            | zzz               | -2
-        // CCC            | CCC               | 35
-        // Default (AAA)  | Default           | 0
-        // EEE (BBB)      | EEE               | 1
-        // FFF            | FFF               | 2
-        // 
+        // ----------------------------------------------------
+        // Invalid        | Invalid           | -1             
+        // *aaa           | *aaa              | 0              
+        // BBB            | BBB               | 1              
+        // zzz            | zzz               | -2             
+        // CCC            | CCC               | 35             
+        // -GGG-          | -GGG-             | 36             
+        // Default (*aaa) | Default           | 0              
+        // EEE (BBB)      | EEE               | 1              
+        // FFF            | FFF               | 2              
+        //
         // displayedMaskNames | displayedMaskRawNames | displayedMaskValues | realMaskField
-        // ---------------------------------------------------------------------------------
-        // AAA                | AAA                   | 0                   | 1u << 0
-        // BBB                | BBB                   | 1                   | 1u << 1
-        // Default (AAA)      | Default               | 0                   | 1u << 0
-        // EEE (BBB)          | EEE                   | 1                   | 1u << 1
-        // FFF                | FFF                   | 2                   | 1u << 2
+        // --------------------------------------------------------------------------------
+        // *aaa               | *aaa                  | 0                   | 1u << 0      
+        // BBB                | BBB                   | 1                   | 1u << 1      
+        // Default (*aaa)     | Default               | 0                   | 1u << 0      
+        // EEE (BBB)          | EEE                   | 1                   | 1u << 1      
+        // FFF                | FFF                   | 2                   | 1u << 2   
 
         public class EnumDisplayInfo
         {
@@ -135,15 +140,24 @@ namespace HTC.UnityPlugin.Utility
                                              .Where(fi => fi.IsStatic && fi.GetCustomAttributes(typeof(HideInInspector), true).Length == 0)
                                              .OrderBy(fi => fi.MetadataToken))
                 {
-                    int index;
+                    int index = displayedRawNamesList.Count;
                     int priorIndex;
                     var name = fi.Name;
                     var value = (int)fi.GetValue(null);
 
+                    // custom displayed name
+                    {
+                        var overrideNameAttrs = fi.GetCustomAttributes(typeof(OverrideEnumDisplayedNameAttribute), true);
+                        if (overrideNameAttrs.Length > 0)
+                        {
+                            var str = (overrideNameAttrs[0] as OverrideEnumDisplayedNameAttribute).DisplayedName;
+                            name = str ?? string.Empty;
+                        }
+                    }
+
                     displayedRawNamesList.Add(name);
                     displayedNamesList.Add(name);
                     displayedValuesList.Add(value);
-                    index = displayedNamesList.Count - 1;
 
                     name2displayedIndex[name] = index;
 
@@ -162,7 +176,7 @@ namespace HTC.UnityPlugin.Utility
                     displayedMaskRawNamesList.Add(name);
                     displayedMaskNamesList.Add(name);
                     displayedMaskValuesList.Add(value);
-                    index = displayedMaskNamesList.Count - 1;
+                    index = displayedMaskRawNamesList.Count - 1;
 
                     name2displayedMaskIndex[name] = index;
 
@@ -185,7 +199,7 @@ namespace HTC.UnityPlugin.Utility
                 displayedNames = displayedNamesList.ToArray();
                 displayedValues = displayedValuesList.ToArray();
 
-                displayedMaskRawNames = displayedRawNamesList.ToArray();
+                displayedMaskRawNames = displayedMaskRawNamesList.ToArray();
                 displayedMaskNames = displayedMaskNamesList.ToArray();
                 displayedMaskValues = displayedMaskValuesList.ToArray();
             }
