@@ -2,9 +2,8 @@
 
 using HTC.UnityPlugin.Utility;
 using UnityEngine;
-using UnityEngine.Events;
 
-namespace HTC.UnityPlugin.Vive
+namespace HTC.UnityPlugin.Vive.Misc
 {
     [AddComponentMenu("HTC/VIU/Object Grabber/Attachable", 0)]
     public class Attachable : MonoBehaviour
@@ -12,14 +11,6 @@ namespace HTC.UnityPlugin.Vive
         public const float MIN_FOLLOWING_DURATION = 0.02f;
         public const float DEFAULT_FOLLOWING_DURATION = 0.04f;
         public const float MAX_FOLLOWING_DURATION = 0.5f;
-
-        public enum AttachMode
-        {
-            NonPhysicsPose,
-            NonphysicsPoint,
-            PhysicsPose,
-            PhysicsPoint,
-        }
 
         public interface IPoseGetter
         {
@@ -33,18 +24,15 @@ namespace HTC.UnityPlugin.Vive
             public RigidPose GetPose() { return new RigidPose(target, useLocal); }
         }
 
-        public Transform m_origin;
-        public bool m_trackPosition = true;
-        public bool m_trackRotation = true;
-        public Vector3 m_offsetPos;
-        public Vector3 m_offsetEular;
-        public Vector3 m_pivot; // local pos
+        [SerializeField]
+        private Vector3 m_anchorPos;
+        [SerializeField]
+        private Vector3 m_anchorEular;
+        [Tooltip("Need Rigidbody with non-trigger Collider component to be blockable")]
+        public bool m_unblockable = false;
 
-        // Rigidbody only
-        [Tooltip("Need Rigidbody & non-trigger Collider component to be blockable")]
-        public bool m_unblockable = true;
-        public bool m_keepVelocityAfterDetached = true;
         // for object with rigidbody component only
+        public bool m_keepVelocityAfterDetached = true;
         [Range(MIN_FOLLOWING_DURATION, MAX_FOLLOWING_DURATION)]
         [Tooltip("For object with Rigidbody component only")]
         public float m_followingDuration = DEFAULT_FOLLOWING_DURATION;
@@ -55,17 +43,17 @@ namespace HTC.UnityPlugin.Vive
         private IPoseGetter m_target;
         private RigidPose m_prevPose;
 
+        private Rigidbody rigid { get; set; }
         public bool isAttached { get { return m_target != null; } }
-        public Rigidbody rigid { get; private set; }
-
-        private bool moveByPhysics { get { return !m_unblockable && rigid != null && !rigid.isKinematic; } }
         private bool isAttachedLastFrame { get; set; }
-        private RigidPose offsetPose { get { return new RigidPose(m_offsetPos, Quaternion.Euler(m_offsetEular)); } }
-        private RigidPose pivotInversePose { get { return new RigidPose(m_pivot, Quaternion.identity).GetInverse(); } }
+        private bool moveByPhysics { get { return !m_unblockable && rigid != null && !rigid.isKinematic; } }
+        public Vector3 anchorPos { get { return m_anchorPos; } set { m_anchorPos = value; } }
+        public Vector3 anchorEular { get { return m_anchorEular; } set { m_anchorEular = value; } }
+        private RigidPose anchorInversePose { get { return new RigidPose(transform) * new RigidPose(transform.TransformPoint(anchorPos), transform.rotation * Quaternion.Euler(anchorEular)).GetInverse(); } }
 
         private void Awake()
         {
-            rigid = GetComponent<Rigidbody>();
+            UpdateRigidbody();
             m_transProvider = new TransformPoseProvider();
             isAttachedLastFrame = false;
         }
@@ -77,8 +65,7 @@ namespace HTC.UnityPlugin.Vive
                 if (isAttached)
                 {
                     m_prevPose = new RigidPose(transform);
-
-                    var targetPose = m_target.GetPose() * offsetPose * pivotInversePose;
+                    var targetPose = m_target.GetPose() * anchorInversePose;
 
                     if (rigid != null)
                     {
@@ -86,8 +73,8 @@ namespace HTC.UnityPlugin.Vive
                         rigid.angularVelocity = Vector3.zero;
                     }
 
-                    if (m_trackPosition) { transform.position = targetPose.pos; }
-                    if (m_trackRotation) { transform.rotation = targetPose.rot; }
+                    transform.position = targetPose.pos;
+                    transform.rotation = targetPose.rot;
 
                     isAttachedLastFrame = true;
                 }
@@ -95,17 +82,13 @@ namespace HTC.UnityPlugin.Vive
                 {
                     if (isAttachedLastFrame && m_keepVelocityAfterDetached && rigid != null && !rigid.isKinematic && m_prevPose != RigidPose.identity)
                     {
-                        if (m_trackPosition)
-                        {
-                            rigid.velocity = Vector3.zero;
-                            AddForce(m_prevPose.pos, transform.position, Time.deltaTime);
-                        }
+                        rigid.velocity = Vector3.zero;
+                        rigid.angularVelocity = Vector3.zero;
 
-                        if (m_trackRotation)
-                        {
-                            rigid.angularVelocity = Vector3.zero;
-                            AddTorce(m_prevPose.rot, transform.rotation, Time.deltaTime);
-                        }
+                        AddForce(m_prevPose.pos, transform.position, Time.deltaTime);
+                        AddTorce(m_prevPose.rot, transform.rotation, Time.deltaTime);
+
+                        rigid = null;
                     }
 
                     isAttachedLastFrame = false;
@@ -120,13 +103,13 @@ namespace HTC.UnityPlugin.Vive
             {
                 if (isAttached)
                 {
-                    var targetPose = m_target.GetPose() * offsetPose * pivotInversePose;
+                    var targetPose = m_target.GetPose() * anchorInversePose;
 
                     rigid.velocity = Vector3.zero;
                     rigid.angularVelocity = Vector3.zero;
 
-                    if (m_trackPosition) { AddForce(transform.position, targetPose.pos, m_followingDuration); }
-                    if (m_trackRotation) { AddTorce(transform.rotation, targetPose.rot, m_followingDuration); }
+                    AddForce(transform.TransformPoint(anchorPos), targetPose.pos, m_followingDuration);
+                    //AddTorce(transform.rotation, targetPose.rot, m_followingDuration);
 
                     isAttachedLastFrame = true;
                 }
@@ -143,9 +126,17 @@ namespace HTC.UnityPlugin.Vive
             }
         }
 
+        /// <summary>
+        /// Must called whenever rigidbody on this gameobject is added/destroyed
+        /// </summary>
+        public void UpdateRigidbody()
+        {
+            rigid = GetComponent<Rigidbody>();
+        }
+
         public bool IsAttachingTo(Transform target)
         {
-            return isAttached && m_transProvider.target == target;
+            return m_target == m_transProvider && m_transProvider.target == target;
         }
 
         public bool IsAttachingTo(IPoseGetter target)
@@ -153,41 +144,16 @@ namespace HTC.UnityPlugin.Vive
             return m_target == target;
         }
 
-        public void AttachToTransformPoint(Transform target)
+        public void AttachToTransform(Transform target)
         {
-            //if (isAttached) { Detach(); }
-            //m_transProvider.target = target;
-            //m_transProvider.useLocal = false;
-            //AttachToPoint(m_transProvider);
+            AttachToTransform(target, false);
         }
 
-        public void AttachToTransformPose(Transform target)
+        public void AttachToTransform(Transform target, bool useLocal)
         {
-            //if (isAttached) { Detach(); }
-            //m_transProvider.target = target;
-            //m_transProvider.useLocal = false;
-            //AttachToPose(m_transProvider);
-        }
-
-        public void AttachToTransformPoint(Transform target, bool useLocal)
-        {
-            //if (isAttached) { Detach(); }
-            //m_transProvider.target = target;
-            //m_transProvider.useLocal = useLocal;
-            //AttachToPoint(m_transProvider);
-        }
-
-        public void AttachToTransformPose(Transform target, bool useLocal)
-        {
-            //if (isAttached) { Detach(); }
-            //m_transProvider.target = target;
-            //m_transProvider.useLocal = useLocal;
-            //AttachToPose(m_transProvider);
-        }
-
-        public void AttachToPoint(IPoseGetter target)
-        {
-            m_target = target;
+            m_transProvider.target = target;
+            m_transProvider.useLocal = useLocal;
+            AttachToPose(target == null ? null : m_transProvider);
         }
 
         public void AttachToPose(IPoseGetter target)
@@ -195,21 +161,9 @@ namespace HTC.UnityPlugin.Vive
             m_target = target;
         }
 
-        public void Detach(Transform target)
+        public void Detach()
         {
-            m_transProvider.target = null;
-            m_target = null;
-        }
-
-        public void Detach(IPoseGetter target)
-        {
-
-        }
-
-        public void DetachAll()
-        {
-            //m_transProvider.target = null;
-            //m_target = null;
+            AttachToTransform(null);
         }
 
         private void AddForce(Vector3 from, Vector3 to, float duration)
@@ -217,7 +171,7 @@ namespace HTC.UnityPlugin.Vive
             var diffPos = to - from;
             var velocity = Mathf.Approximately(diffPos.sqrMagnitude, 0f) ? Vector3.zero : diffPos / duration;
 
-            rigid.AddForceAtPosition(velocity, transform.TransformPoint(m_pivot), ForceMode.VelocityChange);
+            rigid.AddForceAtPosition(velocity, transform.TransformPoint(anchorPos), ForceMode.VelocityChange);
         }
 
         private void AddTorce(Quaternion from, Quaternion to, float duration)
