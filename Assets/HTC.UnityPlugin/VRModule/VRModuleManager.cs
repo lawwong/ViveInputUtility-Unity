@@ -76,7 +76,7 @@ namespace HTC.UnityPlugin.VRModuleManagement
             m_modules[(int)VRModuleActiveEnum.SteamVR] = new SteamVRModule();
             m_modules[(int)VRModuleActiveEnum.OculusVR] = new OculusVRModule();
             m_modules[(int)VRModuleActiveEnum.DayDream] = new GoogleVRModule();
-            m_modules[(int)VRModuleActiveEnum.WaveVR] = new DefaultModule();
+            m_modules[(int)VRModuleActiveEnum.WaveVR] = new WaveVRModule();
 
             s_deviceSerialNumberTable.Clear();
 
