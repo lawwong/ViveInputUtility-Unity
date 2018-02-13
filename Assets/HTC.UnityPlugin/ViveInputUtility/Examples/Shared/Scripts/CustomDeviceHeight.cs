@@ -4,12 +4,6 @@ using HTC.UnityPlugin.Utility;
 using HTC.UnityPlugin.VRModuleManagement;
 using UnityEngine;
 
-#if UNITY_2017_2_OR_NEWER
-using UnityEngine.XR;
-#else
-using XRSettings = UnityEngine.VR.VRSettings;
-#endif
-
 namespace HTC.UnityPlugin.Vive
 {
     // This script set custom device height depends on loaded VR device,
@@ -53,10 +47,13 @@ namespace HTC.UnityPlugin.Vive
 
         public void UpdateHeight()
         {
-            if (VRModule.activeModule == VRModuleActiveEnum.DayDream)
+            switch (VRModule.activeModule)
             {
-                var pos = transform.localPosition;
-                transform.localPosition = new Vector3(pos.x, m_height, pos.y);
+                case VRModuleActiveEnum.DayDream:
+                case VRModuleActiveEnum.WaveVR:
+                    var pos = transform.localPosition;
+                    transform.localPosition = new Vector3(pos.x, m_height, pos.y);
+                    break;
             }
         }
     }
