@@ -159,6 +159,33 @@ namespace HTC.UnityPlugin.Vive
             //    recommendedValue = true,
             //});
 
+            s_settings.Add(new RecommendedSetting<bool>()
+            {
+                settingTitle = "Virtual Reality Supported with OpenVR",
+                skipCheckFunc = () => !VIUSettingsEditor.canSupportOpenVR,
+                currentValueFunc = () => VIUSettingsEditor.supportOpenVR,
+                setValueFunc = v => VIUSettingsEditor.supportOpenVR = v,
+                recommendedValue = true,
+            });
+
+            s_settings.Add(new RecommendedSetting<bool>()
+            {
+                settingTitle = "Virtual Reality Supported with Oculus",
+                skipCheckFunc = () => !VIUSettingsEditor.canSupportOculus,
+                currentValueFunc = () => VIUSettingsEditor.supportOculus,
+                setValueFunc = v => VIUSettingsEditor.supportOculus = v,
+                recommendedValue = true,
+            });
+
+            s_settings.Add(new RecommendedSetting<bool>()
+            {
+                settingTitle = "Virtual Reality Supported with Daydream",
+                skipCheckFunc = () => !VIUSettingsEditor.canSupportDaydream,
+                currentValueFunc = () => VIUSettingsEditor.supportDaydream,
+                setValueFunc = v => VIUSettingsEditor.supportDaydream = v,
+                recommendedValue = true,
+            });
+
             s_settings.Add(new RecommendedSetting<BuildTarget>()
             {
                 settingTitle = "Build Target",
@@ -246,7 +273,7 @@ namespace HTC.UnityPlugin.Vive
                 skipCheckFunc = () => VRModule.isSteamVRPluginDetected,
                 currentValueFunc = () => PlayerSettings.gpuSkinning,
                 setValueFunc = v => PlayerSettings.gpuSkinning = v,
-                recommendedValue = true,
+                recommendedValueFunc = () => !VIUSettingsEditor.supportWaveVR,
             });
 
             s_settings.Add(new RecommendedSetting<bool>()
@@ -344,30 +371,30 @@ namespace HTC.UnityPlugin.Vive
                 recommendedValue = ColorSpace.Linear,
             });
 
+            s_settings.Add(new RecommendedSetting<UIOrientation>()
+            {
+                settingTitle = "Default Interface Orientation",
+                skipCheckFunc = () => !VIUSettingsEditor.supportWaveVR || VIUSettingsEditor.activeBuildTargetGroup != BuildTargetGroup.Android,
+                currentValueFunc = () => PlayerSettings.defaultInterfaceOrientation,
+                setValueFunc = v => PlayerSettings.defaultInterfaceOrientation = v,
+                recommendedValue = UIOrientation.LandscapeLeft,
+            });
+
             s_settings.Add(new RecommendedSetting<bool>()
             {
-                settingTitle = "Virtual Reality Supported with OpenVR",
-                skipCheckFunc = () => !VIUSettingsEditor.canSupportOpenVR,
-                currentValueFunc = () => VIUSettingsEditor.supportOpenVR,
-                setValueFunc = v => VIUSettingsEditor.supportOpenVR = v,
+                settingTitle = "Multithreaded Rendering",
+                skipCheckFunc = () => !VIUSettingsEditor.supportWaveVR || VIUSettingsEditor.activeBuildTargetGroup != BuildTargetGroup.Android,
+                currentValueFunc = () => PlayerSettings.mobileMTRendering,
+                setValueFunc = v => PlayerSettings.mobileMTRendering = v,
                 recommendedValue = true,
             });
 
             s_settings.Add(new RecommendedSetting<bool>()
             {
-                settingTitle = "Virtual Reality Supported with Oculus",
-                skipCheckFunc = () => !VIUSettingsEditor.canSupportOculus,
-                currentValueFunc = () => VIUSettingsEditor.supportOculus,
-                setValueFunc = v => VIUSettingsEditor.supportOculus = v,
-                recommendedValue = true,
-            });
-
-            s_settings.Add(new RecommendedSetting<bool>()
-            {
-                settingTitle = "Virtual Reality Supported with Daydream",
-                skipCheckFunc = () => !VIUSettingsEditor.canSupportDaydream,
-                currentValueFunc = () => VIUSettingsEditor.supportDaydream,
-                setValueFunc = v => VIUSettingsEditor.supportDaydream = v,
+                settingTitle = "Graphic Jobs",
+                skipCheckFunc = () => !VIUSettingsEditor.supportWaveVR || VIUSettingsEditor.activeBuildTargetGroup != BuildTargetGroup.Android,
+                currentValueFunc = () => PlayerSettings.graphicsJobs,
+                setValueFunc = v => PlayerSettings.graphicsJobs = v,
                 recommendedValue = true,
             });
         }
@@ -433,7 +460,7 @@ namespace HTC.UnityPlugin.Vive
 
             showNewVersion = !string.IsNullOrEmpty(ignoreThisVersionKey) && !VIUProjectSettings.HasIgnoreKey(ignoreThisVersionKey) && latestVersion > VIUVersion.current;
 
-            if (showNewVersion || RecommendedSettingPromptCount() > 0)
+            if (showNewVersion || (VIUSettingsEditor.supportAnyVR && RecommendedSettingPromptCount() > 0))
             {
                 TryOpenRecommendedSettingWindow();
             }
