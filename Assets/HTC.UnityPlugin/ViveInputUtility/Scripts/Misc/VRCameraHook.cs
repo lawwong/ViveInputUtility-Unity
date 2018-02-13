@@ -37,9 +37,9 @@ namespace HTC.UnityPlugin.Vive
 #endif
 #if VIU_WAVEVR
                 case VRModuleActiveEnum.WaveVR:
-                    if (GetComponent<WaveVR_Camera>() == null)
+                    if (GetComponent<WaveVR_Render>() == null)
                     {
-                        gameObject.AddComponent<WaveVR_Camera>();
+                        gameObject.AddComponent<WaveVR_Render>();
                     }
                     if (GetComponent<VivePoseTracker>() == null)
                     {
