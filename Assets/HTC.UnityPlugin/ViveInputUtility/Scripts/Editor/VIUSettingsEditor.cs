@@ -617,9 +617,9 @@ namespace HTC.UnityPlugin.Vive
             }
         }
 #else
-        public static bool canSupportDaydream { get { return false; } }
+        public static bool canSupportWaveVR { get { return false; } }
 
-        public static bool supportDaydream { get { return false; } set { } }
+        public static bool supportWaveVR { get { return false; } set { } }
 #endif
 
         [PreferenceItem("VIU Settings")]

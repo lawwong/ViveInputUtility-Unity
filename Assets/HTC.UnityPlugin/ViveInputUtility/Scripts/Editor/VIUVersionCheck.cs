@@ -389,6 +389,7 @@ namespace HTC.UnityPlugin.Vive
                 recommendedValue = true,
             });
 
+#if UNITY_5_4_OR_NEWER
             s_settings.Add(new RecommendedSetting<bool>()
             {
                 settingTitle = "Graphic Jobs",
@@ -397,6 +398,7 @@ namespace HTC.UnityPlugin.Vive
                 setValueFunc = v => PlayerSettings.graphicsJobs = v,
                 recommendedValue = true,
             });
+#endif
         }
 
         // check vive input utility version on github
