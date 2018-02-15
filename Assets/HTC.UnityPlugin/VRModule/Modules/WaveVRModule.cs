@@ -94,23 +94,23 @@ namespace HTC.UnityPlugin.VRModuleManagement
                     uint buttons = 0;
                     uint touches = 0;
 
-                    // FIXME: What does WVR_GetInputTypeCount means?
+                    // FIXME: What does WVR_GetInputTypeCount mean?
                     //var analogCount = Interop.WVR_GetInputTypeCount(deviceType, WVR_InputType.WVR_InputType_Analog);
                     //if (m_analogStates == null || m_analogStates.Length < analogCount) { m_analogStates = new WVR_AnalogState_t[analogCount]; }
 
                     if (Interop.WVR_GetInputDeviceState(deviceType, INPUT_TYPE, ref buttons, ref touches, m_analogStates, m_analogStates.Length))
                     {
-                        currState[i].SetButtonPress(VRModuleRawButton.System, (buttons & (uint)WVR_InputId.WVR_InputId_Alias1_System) != 0u);
-                        currState[i].SetButtonPress(VRModuleRawButton.ApplicationMenu, (buttons & (uint)WVR_InputId.WVR_InputId_Alias1_Menu) != 0u);
-                        currState[i].SetButtonPress(VRModuleRawButton.Grip, (buttons & (uint)WVR_InputId.WVR_InputId_Alias1_Grip) != 0u);
-                        currState[i].SetButtonPress(VRModuleRawButton.Touchpad, (buttons & (uint)WVR_InputId.WVR_InputId_Alias1_Touchpad) != 0u);
-                        currState[i].SetButtonPress(VRModuleRawButton.Trigger, (buttons & (uint)WVR_InputId.WVR_InputId_Alias1_Trigger) != 0u);
+                        currState[i].SetButtonPress(VRModuleRawButton.System, (buttons & (1 << (int)WVR_InputId.WVR_InputId_Alias1_System)) != 0u);
+                        currState[i].SetButtonPress(VRModuleRawButton.ApplicationMenu, (buttons & (1 << (int)WVR_InputId.WVR_InputId_Alias1_Menu)) != 0u);
+                        currState[i].SetButtonPress(VRModuleRawButton.Grip, (buttons & (1 << (int)WVR_InputId.WVR_InputId_Alias1_Grip)) != 0u);
+                        currState[i].SetButtonPress(VRModuleRawButton.Touchpad, (buttons & (1 << (int)WVR_InputId.WVR_InputId_Alias1_Touchpad)) != 0u);
+                        currState[i].SetButtonPress(VRModuleRawButton.Trigger, (buttons & ((1 << (int)WVR_InputId.WVR_InputId_Alias1_Bumper) | (1 << (int)WVR_InputId.WVR_InputId_Alias1_Trigger))) != 0u);
 
-                        currState[i].SetButtonTouch(VRModuleRawButton.System, (touches & (uint)WVR_InputId.WVR_InputId_Alias1_System) != 0u);
-                        currState[i].SetButtonTouch(VRModuleRawButton.ApplicationMenu, (touches & (uint)WVR_InputId.WVR_InputId_Alias1_Menu) != 0u);
-                        currState[i].SetButtonTouch(VRModuleRawButton.Grip, (touches & (uint)WVR_InputId.WVR_InputId_Alias1_Grip) != 0u);
-                        currState[i].SetButtonTouch(VRModuleRawButton.Touchpad, (touches & (uint)WVR_InputId.WVR_InputId_Alias1_Touchpad) != 0u);
-                        currState[i].SetButtonTouch(VRModuleRawButton.Trigger, (touches & (uint)WVR_InputId.WVR_InputId_Alias1_Trigger) != 0u);
+                        currState[i].SetButtonTouch(VRModuleRawButton.System, (touches & (1 << (int)WVR_InputId.WVR_InputId_Alias1_System)) != 0u);
+                        currState[i].SetButtonTouch(VRModuleRawButton.ApplicationMenu, (touches & (1 << (int)WVR_InputId.WVR_InputId_Alias1_Menu)) != 0u);
+                        currState[i].SetButtonTouch(VRModuleRawButton.Grip, (touches & (1 << (int)WVR_InputId.WVR_InputId_Alias1_Grip)) != 0u);
+                        currState[i].SetButtonTouch(VRModuleRawButton.Touchpad, (touches & (1 << (int)WVR_InputId.WVR_InputId_Alias1_Touchpad)) != 0u);
+                        currState[i].SetButtonTouch(VRModuleRawButton.Trigger, (buttons & ((1 << (int)WVR_InputId.WVR_InputId_Alias1_Bumper) | (1 << (int)WVR_InputId.WVR_InputId_Alias1_Trigger))) != 0u);
 
                         for (int j = 0, jmax = m_analogStates.Length; j < jmax; ++j)
                         {
@@ -123,10 +123,15 @@ namespace HTC.UnityPlugin.VRModuleManagement
                                     }
                                     break;
                                 case WVR_InputId.WVR_InputId_Alias1_Touchpad:
-                                    if (m_analogStates[j].type == WVR_AnalogType.WVR_AnalogType_TouchPad)
+                                    if (m_analogStates[j].type == WVR_AnalogType.WVR_AnalogType_TouchPad && currState[i].GetButtonTouch(VRModuleRawButton.Touchpad))
                                     {
                                         currState[i].SetAxisValue(VRModuleRawAxis.TouchpadX, m_analogStates[j].axis.x);
-                                        currState[i].SetAxisValue(VRModuleRawAxis.TouchpadX, m_analogStates[j].axis.y);
+                                        currState[i].SetAxisValue(VRModuleRawAxis.TouchpadY, m_analogStates[j].axis.y);
+                                    }
+                                    else
+                                    {
+                                        currState[i].SetAxisValue(VRModuleRawAxis.TouchpadX, 0f);
+                                        currState[i].SetAxisValue(VRModuleRawAxis.TouchpadY, 0f);
                                     }
                                     break;
                             }
