@@ -135,7 +135,7 @@ namespace HTC.UnityPlugin.VRModuleManagement
                     {
                         currState[i].SetButtonPress(VRModuleRawButton.System, (buttons & (1 << (int)WVR_InputId.WVR_InputId_Alias1_System)) != 0u);
                         currState[i].SetButtonPress(VRModuleRawButton.ApplicationMenu, (buttons & (1 << (int)WVR_InputId.WVR_InputId_Alias1_Menu)) != 0u);
-                        currState[i].SetButtonPress(VRModuleRawButton.Touchpad, (buttons & (1 << (int)(WVR_InputId.WVR_InputId_Alias1_DPad_Up | WVR_InputId.WVR_InputId_Alias1_DPad_Left | WVR_InputId.WVR_InputId_Alias1_DPad_Right | WVR_InputId.WVR_InputId_Alias1_DPad_Down))) != 0u);
+                        currState[i].SetButtonPress(VRModuleRawButton.Touchpad, (buttons & (1 << (int)(WVR_InputId.WVR_InputId_Alias1_DPad_Up) | 1 << (int)(WVR_InputId.WVR_InputId_Alias1_DPad_Left) | 1 << (int)(WVR_InputId.WVR_InputId_Alias1_DPad_Right) | 1 << (int)(WVR_InputId.WVR_InputId_Alias1_DPad_Down))) != 0u);
                         currState[i].SetButtonPress(VRModuleRawButton.Trigger, (buttons & (1 << (int)WVR_InputId.WVR_InputId_Alias1_Bumper)) != 0u);
                         currState[i].SetButtonPress(VRModuleRawButton.DPadLeft, (buttons & (1 << (int)WVR_InputId.WVR_InputId_Alias1_DPad_Left)) != 0u);
                         currState[i].SetButtonPress(VRModuleRawButton.DPadUp, (buttons & (1 << (int)WVR_InputId.WVR_InputId_Alias1_DPad_Up)) != 0u);
