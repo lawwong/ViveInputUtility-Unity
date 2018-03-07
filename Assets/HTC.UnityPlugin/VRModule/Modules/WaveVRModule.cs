@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using HTC.UnityPlugin.Utility;
+using UnityEngine;
 #if VIU_WAVEVR && UNITY_ANDROID
 using wvr;
 #endif
@@ -14,6 +15,20 @@ namespace HTC.UnityPlugin.VRModuleManagement
         private const uint DEVICE_COUNT = 3;
         private const uint INPUT_TYPE = (uint)(WVR_InputType.WVR_InputType_Button | WVR_InputType.WVR_InputType_Touch | WVR_InputType.WVR_InputType_Analog);
 
+        public static readonly Vector3 DEFAULT_NECK_POSITION = new Vector3(0.0f, -0.15f, 0.0f);
+        public static readonly Vector3 DEFAULT_ELBOW_REST_POSITION = new Vector3(0.195f, -0.5f, 0.005f);
+        public static readonly Vector3 DEFAULT_WRIST_REST_POSITION = new Vector3(0.0f, 0.0f, 0.25f);
+        public static readonly Vector3 DEFAULT_CONTROLLER_REST_POSITION = new Vector3(0.0f, 0.0f, 0.05f);
+        public static readonly Vector3 DEFAULT_ARM_EXTENSION_OFFSET = new Vector3(-0.13f, 0.14f, 0.08f);
+        [Range(0.0f, 1.0f)]
+        public float elbowBendRatio = DEFAULT_ELBOW_BEND_RATIO;
+        public const float DEFAULT_ELBOW_BEND_RATIO = 0.6f;
+        public const float MIN_EXTENSION_ANGLE = 7.0f;
+        public const float MAX_EXTENSION_ANGLE = 60.0f;
+        public const float EXTENSION_WEIGHT = 0.4f;
+
+        private Vector3 handedMultiplier;
+
         private WVR_DeviceType[] m_deviceTypes = new WVR_DeviceType[]
         {
             WVR_DeviceType.WVR_DeviceType_HMD,
@@ -22,6 +37,7 @@ namespace HTC.UnityPlugin.VRModuleManagement
         };
         private WVR_DevicePosePair_t[] m_poses = new WVR_DevicePosePair_t[DEVICE_COUNT];  // HMD, R, L controllers.
         private WVR_AnalogState_t[] m_analogStates = new WVR_AnalogState_t[2];
+        private Vector3 v3ChangeArmXAxis = new Vector3(0, 1, 1);
 
         public override bool ShouldActiveModule()
         {
@@ -57,6 +73,10 @@ namespace HTC.UnityPlugin.VRModuleManagement
                     { poseOrigin = WVR_PoseOriginModel.WVR_PoseOriginModel_OriginOnGround; break; }
             }
 
+            IVRModuleDeviceStateRW headState = null;
+            IVRModuleDeviceStateRW rightState = null;
+            IVRModuleDeviceStateRW leftState = null;
+
             Interop.WVR_GetSyncPose(poseOrigin, m_poses, DEVICE_COUNT);
 
             for (int i = 0; i < DEVICE_COUNT; ++i)
@@ -91,10 +111,23 @@ namespace HTC.UnityPlugin.VRModuleManagement
                     currState[i].position = rigidTransform.pos;
                     currState[i].rotation = rigidTransform.rot;
 
+                    switch (deviceType)
+                    {
+                        case WVR_DeviceType.WVR_DeviceType_HMD:
+                            headState = currState[i];
+                            break;
+                        case WVR_DeviceType.WVR_DeviceType_Controller_Right:
+                            rightState = currState[i];
+                            break;
+                        case WVR_DeviceType.WVR_DeviceType_Controller_Left:
+                            leftState = currState[i];
+                            break;
+                    }
+
                     uint buttons = 0;
                     uint touches = 0;
 
-                    // FIXME: What does WVR_GetInputTypeCount mean?
+                    // FIXME: What does WVR_GetInputTypeCount means?
                     //var analogCount = Interop.WVR_GetInputTypeCount(deviceType, WVR_InputType.WVR_InputType_Analog);
                     //if (m_analogStates == null || m_analogStates.Length < analogCount) { m_analogStates = new WVR_AnalogState_t[analogCount]; }
 
@@ -102,15 +135,13 @@ namespace HTC.UnityPlugin.VRModuleManagement
                     {
                         currState[i].SetButtonPress(VRModuleRawButton.System, (buttons & (1 << (int)WVR_InputId.WVR_InputId_Alias1_System)) != 0u);
                         currState[i].SetButtonPress(VRModuleRawButton.ApplicationMenu, (buttons & (1 << (int)WVR_InputId.WVR_InputId_Alias1_Menu)) != 0u);
-                        currState[i].SetButtonPress(VRModuleRawButton.Grip, (buttons & (1 << (int)WVR_InputId.WVR_InputId_Alias1_Grip)) != 0u);
-                        currState[i].SetButtonPress(VRModuleRawButton.Touchpad, (buttons & (1 << (int)WVR_InputId.WVR_InputId_Alias1_Touchpad)) != 0u);
-                        currState[i].SetButtonPress(VRModuleRawButton.Trigger, (buttons & ((1 << (int)WVR_InputId.WVR_InputId_Alias1_Bumper) | (1 << (int)WVR_InputId.WVR_InputId_Alias1_Trigger))) != 0u);
+                        currState[i].SetButtonPress(VRModuleRawButton.Touchpad, (buttons & (1 << (int)(WVR_InputId.WVR_InputId_Alias1_DPad_Up | WVR_InputId.WVR_InputId_Alias1_DPad_Left | WVR_InputId.WVR_InputId_Alias1_DPad_Right | WVR_InputId.WVR_InputId_Alias1_DPad_Down))) != 0u);
+                        currState[i].SetButtonPress(VRModuleRawButton.Trigger, (buttons & (1 << (int)WVR_InputId.WVR_InputId_Alias1_Bumper)) != 0u);
 
                         currState[i].SetButtonTouch(VRModuleRawButton.System, (touches & (1 << (int)WVR_InputId.WVR_InputId_Alias1_System)) != 0u);
                         currState[i].SetButtonTouch(VRModuleRawButton.ApplicationMenu, (touches & (1 << (int)WVR_InputId.WVR_InputId_Alias1_Menu)) != 0u);
-                        currState[i].SetButtonTouch(VRModuleRawButton.Grip, (touches & (1 << (int)WVR_InputId.WVR_InputId_Alias1_Grip)) != 0u);
                         currState[i].SetButtonTouch(VRModuleRawButton.Touchpad, (touches & (1 << (int)WVR_InputId.WVR_InputId_Alias1_Touchpad)) != 0u);
-                        currState[i].SetButtonTouch(VRModuleRawButton.Trigger, (buttons & ((1 << (int)WVR_InputId.WVR_InputId_Alias1_Bumper) | (1 << (int)WVR_InputId.WVR_InputId_Alias1_Trigger))) != 0u);
+                        currState[i].SetButtonTouch(VRModuleRawButton.Trigger, (touches & (1 << (int)WVR_InputId.WVR_InputId_Alias1_Bumper)) != 0u);
 
                         for (int j = 0, jmax = m_analogStates.Length; j < jmax; ++j)
                         {
@@ -152,6 +183,64 @@ namespace HTC.UnityPlugin.VRModuleManagement
                     }
                 }
             }
+
+            handedMultiplier.Set(0, 1, 1);
+
+            // add arms to controllers
+            if (rightState != null && rightState.isConnected)
+            {
+                rightState.position = CalculateControllerPosition(headState, rightState, 1.0f);
+            }
+            else if (leftState != null && leftState.isConnected)
+            {
+                leftState.position = CalculateControllerPosition(headState, leftState, -1.0f);
+            }
+        }
+
+        private Vector3 CalculateControllerPosition(IVRModuleDeviceStateRW head, IVRModuleDeviceStateRW controller, float x)
+        {
+            handedMultiplier.x = x;
+            var torsoRot = GetTorsoRotation(head.pose);
+            var rightForwardRelativeToTorso = (Quaternion.Inverse(torsoRot) * controller.pose.rot) * Vector3.forward;
+            var xAngle = 90.0f - Vector3.Angle(rightForwardRelativeToTorso, Vector3.up);
+            var xyRotation = Quaternion.FromToRotation(Vector3.forward, rightForwardRelativeToTorso);
+            var extensionRatio = CalculateExtensionRatio(xAngle);
+            var lerpRotation = CalculateLerpRotation(xyRotation, extensionRatio);
+
+            var elbowRot = torsoRot * Quaternion.Inverse(lerpRotation) * xyRotation;
+            var wristRot = elbowRot * lerpRotation;
+
+            var result = head.pose.pos + DEFAULT_NECK_POSITION;
+            result += torsoRot * (Vector3.Scale(DEFAULT_ELBOW_REST_POSITION, handedMultiplier) + Vector3.Scale(DEFAULT_ARM_EXTENSION_OFFSET, handedMultiplier) * extensionRatio);
+            result += elbowRot * Vector3.Scale(DEFAULT_WRIST_REST_POSITION, handedMultiplier);
+            result += wristRot * Vector3.Scale(DEFAULT_CONTROLLER_REST_POSITION, handedMultiplier);
+
+            return result;
+        }
+
+        private Quaternion GetTorsoRotation(RigidPose headPose)
+        {
+            var headForwardOnXZPlane = headPose.forward;
+            headForwardOnXZPlane.y = 0;
+            headForwardOnXZPlane.Normalize();
+            return Quaternion.FromToRotation(Vector3.forward, headForwardOnXZPlane);
+        }
+
+        private float CalculateExtensionRatio(float xAngle)
+        {
+            float normalizedAngle = (xAngle - MIN_EXTENSION_ANGLE) / (MAX_EXTENSION_ANGLE - MIN_EXTENSION_ANGLE);
+            float extensionRatio = Mathf.Clamp(normalizedAngle, 0.0f, 1.0f);
+            return extensionRatio;
+        }
+
+        private Quaternion CalculateLerpRotation(Quaternion xyRotation, float extensionRatio)
+        {
+            float totalAngle = Quaternion.Angle(xyRotation, Quaternion.identity);
+            float lerpSuppresion = 1.0f - Mathf.Pow(totalAngle / 180.0f, 6.0f);
+            float inverseElbowBendRatio = 1.0f - elbowBendRatio;
+            float lerpValue = inverseElbowBendRatio + elbowBendRatio * extensionRatio * EXTENSION_WEIGHT;
+            lerpValue *= lerpSuppresion;
+            return Quaternion.Lerp(Quaternion.identity, xyRotation, lerpValue);
         }
 
         public override void TriggerViveControllerHaptic(uint deviceIndex, ushort durationMicroSec = 500)
