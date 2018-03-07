@@ -20,8 +20,8 @@ namespace HTC.UnityPlugin.VRModuleManagement
         public static readonly Vector3 DEFAULT_WRIST_REST_POSITION = new Vector3(0.0f, 0.0f, 0.25f);
         public static readonly Vector3 DEFAULT_CONTROLLER_REST_POSITION = new Vector3(0.0f, 0.0f, 0.05f);
         public static readonly Vector3 DEFAULT_ARM_EXTENSION_OFFSET = new Vector3(-0.13f, 0.14f, 0.08f);
-        [Range(0.0f, 1.0f)]
-        public float elbowBendRatio = DEFAULT_ELBOW_BEND_RATIO;
+        public static readonly Vector3 RIGHT_ARM_MULTIPLIER = new Vector3(1f, 1f, 1f);
+        public static readonly Vector3 LEFT_ARM_MULTIPLIER = new Vector3(1f, 1f, 1f);
         public const float DEFAULT_ELBOW_BEND_RATIO = 0.6f;
         public const float MIN_EXTENSION_ANGLE = 7.0f;
         public const float MAX_EXTENSION_ANGLE = 60.0f;
@@ -67,10 +67,10 @@ namespace HTC.UnityPlugin.VRModuleManagement
             switch (VRModule.trackingSpaceType)
             {
                 case VRModuleTrackingSpaceType.RoomScale:
-                    { poseOrigin = WVR_PoseOriginModel.WVR_PoseOriginModel_OriginOnHead; break; }
+                    { poseOrigin = WVR_PoseOriginModel.WVR_PoseOriginModel_OriginOnGround; break; }
                 case VRModuleTrackingSpaceType.Stationary:
                 default:
-                    { poseOrigin = WVR_PoseOriginModel.WVR_PoseOriginModel_OriginOnGround; break; }
+                    { poseOrigin = WVR_PoseOriginModel.WVR_PoseOriginModel_OriginOnHead; break; }
             }
 
             IVRModuleDeviceStateRW headState = null;
@@ -184,63 +184,60 @@ namespace HTC.UnityPlugin.VRModuleManagement
                 }
             }
 
-            handedMultiplier.Set(0, 1, 1);
-
-            // add arms to controllers
-            if (rightState != null && rightState.isConnected)
+            // add right arm
+            if (rightState != null && rightState.isConnected && rightState.position == Vector3.zero)
             {
-                rightState.position = CalculateControllerPosition(headState, rightState, 1.0f);
+                rightState.position = GetControllerPositionWithVirtualArm(GetNeckPose(headState.pose), rightState.rotation, RIGHT_ARM_MULTIPLIER);
             }
-            else if (leftState != null && leftState.isConnected)
+
+            // add left arm
+            if (leftState != null && leftState.isConnected && leftState.position == Vector3.zero)
             {
-                leftState.position = CalculateControllerPosition(headState, leftState, -1.0f);
+                leftState.position = GetControllerPositionWithVirtualArm(GetNeckPose(headState.pose), leftState.rotation, LEFT_ARM_MULTIPLIER);
             }
         }
 
-        private Vector3 CalculateControllerPosition(IVRModuleDeviceStateRW head, IVRModuleDeviceStateRW controller, float x)
+        private static RigidPose GetNeckPose(RigidPose headPose)
         {
-            handedMultiplier.x = x;
-            var torsoRot = GetTorsoRotation(head.pose);
-            var rightForwardRelativeToTorso = (Quaternion.Inverse(torsoRot) * controller.pose.rot) * Vector3.forward;
-            var xAngle = 90.0f - Vector3.Angle(rightForwardRelativeToTorso, Vector3.up);
-            var xyRotation = Quaternion.FromToRotation(Vector3.forward, rightForwardRelativeToTorso);
-            var extensionRatio = CalculateExtensionRatio(xAngle);
-            var lerpRotation = CalculateLerpRotation(xyRotation, extensionRatio);
-
-            var elbowRot = torsoRot * Quaternion.Inverse(lerpRotation) * xyRotation;
-            var wristRot = elbowRot * lerpRotation;
-
-            var result = head.pose.pos + DEFAULT_NECK_POSITION;
-            result += torsoRot * (Vector3.Scale(DEFAULT_ELBOW_REST_POSITION, handedMultiplier) + Vector3.Scale(DEFAULT_ARM_EXTENSION_OFFSET, handedMultiplier) * extensionRatio);
-            result += elbowRot * Vector3.Scale(DEFAULT_WRIST_REST_POSITION, handedMultiplier);
-            result += wristRot * Vector3.Scale(DEFAULT_CONTROLLER_REST_POSITION, handedMultiplier);
-
-            return result;
+            var headForward = headPose.forward;
+            return new RigidPose(headPose.pos + DEFAULT_NECK_POSITION, Quaternion.FromToRotation(Vector3.forward, new Vector3(headForward.x, 0f, headForward.z)));
         }
 
-        private Quaternion GetTorsoRotation(RigidPose headPose)
+        private static float GetExtensionRatio(Vector3 v)
         {
-            var headForwardOnXZPlane = headPose.forward;
-            headForwardOnXZPlane.y = 0;
-            headForwardOnXZPlane.Normalize();
-            return Quaternion.FromToRotation(Vector3.forward, headForwardOnXZPlane);
+            var xAngle = 90f - Vector3.Angle(v, Vector3.up);
+            return Mathf.Clamp01(Mathf.InverseLerp(MIN_EXTENSION_ANGLE, MAX_EXTENSION_ANGLE, xAngle));
         }
 
-        private float CalculateExtensionRatio(float xAngle)
-        {
-            float normalizedAngle = (xAngle - MIN_EXTENSION_ANGLE) / (MAX_EXTENSION_ANGLE - MIN_EXTENSION_ANGLE);
-            float extensionRatio = Mathf.Clamp(normalizedAngle, 0.0f, 1.0f);
-            return extensionRatio;
-        }
-
-        private Quaternion CalculateLerpRotation(Quaternion xyRotation, float extensionRatio)
+        private static Quaternion GetLerpRotation(Quaternion xyRotation, float extensionRatio)
         {
             float totalAngle = Quaternion.Angle(xyRotation, Quaternion.identity);
             float lerpSuppresion = 1.0f - Mathf.Pow(totalAngle / 180.0f, 6.0f);
-            float inverseElbowBendRatio = 1.0f - elbowBendRatio;
-            float lerpValue = inverseElbowBendRatio + elbowBendRatio * extensionRatio * EXTENSION_WEIGHT;
+            float inverseElbowBendRatio = 1.0f - DEFAULT_ELBOW_BEND_RATIO;
+            float lerpValue = inverseElbowBendRatio + DEFAULT_ELBOW_BEND_RATIO * extensionRatio * EXTENSION_WEIGHT;
             lerpValue *= lerpSuppresion;
             return Quaternion.Lerp(Quaternion.identity, xyRotation, lerpValue);
+        }
+
+        private static Vector3 GetControllerPositionWithVirtualArm(RigidPose neckPose, Quaternion ctrlRot, Vector3 sideMultiplier)
+        {
+            var localCtrlForward = (Quaternion.Inverse(neckPose.rot) * ctrlRot) * Vector3.forward;
+            var localCtrlXYRot = Quaternion.FromToRotation(Vector3.forward, localCtrlForward);
+            var extensionRatio = GetExtensionRatio(localCtrlForward);
+            var lerpRotation = GetLerpRotation(localCtrlXYRot, extensionRatio);
+
+            var elbowPose = new RigidPose(
+                Vector3.Scale(DEFAULT_ELBOW_REST_POSITION, sideMultiplier) + Vector3.Scale(DEFAULT_ARM_EXTENSION_OFFSET, sideMultiplier) * extensionRatio,
+                Quaternion.Inverse(lerpRotation) * localCtrlXYRot);
+            var wristPose = new RigidPose(
+                Vector3.Scale(DEFAULT_WRIST_REST_POSITION, sideMultiplier),
+                lerpRotation);
+            var palmPose = new RigidPose(
+                Vector3.Scale(DEFAULT_CONTROLLER_REST_POSITION, sideMultiplier),
+                Quaternion.identity);
+
+            var finalCtrlPose = neckPose * elbowPose * wristPose * palmPose;
+            return finalCtrlPose.pos;
         }
 
         public override void TriggerViveControllerHaptic(uint deviceIndex, ushort durationMicroSec = 500)
