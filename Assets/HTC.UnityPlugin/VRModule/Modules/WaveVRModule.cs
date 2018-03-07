@@ -137,11 +137,19 @@ namespace HTC.UnityPlugin.VRModuleManagement
                         currState[i].SetButtonPress(VRModuleRawButton.ApplicationMenu, (buttons & (1 << (int)WVR_InputId.WVR_InputId_Alias1_Menu)) != 0u);
                         currState[i].SetButtonPress(VRModuleRawButton.Touchpad, (buttons & (1 << (int)(WVR_InputId.WVR_InputId_Alias1_DPad_Up | WVR_InputId.WVR_InputId_Alias1_DPad_Left | WVR_InputId.WVR_InputId_Alias1_DPad_Right | WVR_InputId.WVR_InputId_Alias1_DPad_Down))) != 0u);
                         currState[i].SetButtonPress(VRModuleRawButton.Trigger, (buttons & (1 << (int)WVR_InputId.WVR_InputId_Alias1_Bumper)) != 0u);
+                        currState[i].SetButtonPress(VRModuleRawButton.DPadLeft, (buttons & (1 << (int)WVR_InputId.WVR_InputId_Alias1_DPad_Left)) != 0u);
+                        currState[i].SetButtonPress(VRModuleRawButton.DPadUp, (buttons & (1 << (int)WVR_InputId.WVR_InputId_Alias1_DPad_Up)) != 0u);
+                        currState[i].SetButtonPress(VRModuleRawButton.DPadRight, (buttons & (1 << (int)WVR_InputId.WVR_InputId_Alias1_DPad_Right)) != 0u);
+                        currState[i].SetButtonPress(VRModuleRawButton.DPadDown, (buttons & (1 << (int)WVR_InputId.WVR_InputId_Alias1_DPad_Down)) != 0u);
 
                         currState[i].SetButtonTouch(VRModuleRawButton.System, (touches & (1 << (int)WVR_InputId.WVR_InputId_Alias1_System)) != 0u);
                         currState[i].SetButtonTouch(VRModuleRawButton.ApplicationMenu, (touches & (1 << (int)WVR_InputId.WVR_InputId_Alias1_Menu)) != 0u);
                         currState[i].SetButtonTouch(VRModuleRawButton.Touchpad, (touches & (1 << (int)WVR_InputId.WVR_InputId_Alias1_Touchpad)) != 0u);
                         currState[i].SetButtonTouch(VRModuleRawButton.Trigger, (touches & (1 << (int)WVR_InputId.WVR_InputId_Alias1_Bumper)) != 0u);
+                        currState[i].SetButtonTouch(VRModuleRawButton.DPadLeft, (touches & (1 << (int)WVR_InputId.WVR_InputId_Alias1_DPad_Left)) != 0u);
+                        currState[i].SetButtonTouch(VRModuleRawButton.DPadUp, (touches & (1 << (int)WVR_InputId.WVR_InputId_Alias1_DPad_Up)) != 0u);
+                        currState[i].SetButtonTouch(VRModuleRawButton.DPadRight, (touches & (1 << (int)WVR_InputId.WVR_InputId_Alias1_DPad_Right)) != 0u);
+                        currState[i].SetButtonTouch(VRModuleRawButton.DPadDown, (touches & (1 << (int)WVR_InputId.WVR_InputId_Alias1_DPad_Down)) != 0u);
 
                         for (int j = 0, jmax = m_analogStates.Length; j < jmax; ++j)
                         {
