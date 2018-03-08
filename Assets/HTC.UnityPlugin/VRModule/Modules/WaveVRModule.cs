@@ -37,7 +37,6 @@ namespace HTC.UnityPlugin.VRModuleManagement
         };
         private WVR_DevicePosePair_t[] m_poses = new WVR_DevicePosePair_t[DEVICE_COUNT];  // HMD, R, L controllers.
         private WVR_AnalogState_t[] m_analogStates = new WVR_AnalogState_t[2];
-        private Vector3 v3ChangeArmXAxis = new Vector3(0, 1, 1);
 
         public override bool ShouldActiveModule()
         {
