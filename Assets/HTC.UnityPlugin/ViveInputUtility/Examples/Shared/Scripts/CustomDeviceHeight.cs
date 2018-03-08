@@ -7,7 +7,7 @@ using UnityEngine;
 namespace HTC.UnityPlugin.Vive
 {
     // This script set custom device height depends on loaded VR device,
-    // Daydream and WaveVR need additional height for device so
+    // Daydream need additional height for device so
     // we can control camera-rig like using room-scale VR devices
     public class CustomDeviceHeight : MonoBehaviour
     {
@@ -23,7 +23,7 @@ namespace HTC.UnityPlugin.Vive
 #if UNITY_EDITOR
         private void OnValidate()
         {
-            if (Application.isPlaying)
+            if (Application.isPlaying && isActiveAndEnabled && VRModule.Active)
             {
                 UpdateHeight();
             }
@@ -33,6 +33,7 @@ namespace HTC.UnityPlugin.Vive
         private void OnEnable()
         {
             VRModule.onActiveModuleChanged += OnActiveModuleChanged;
+            VRModule.Initialize();
         }
 
         private void OnDisable()
@@ -50,7 +51,6 @@ namespace HTC.UnityPlugin.Vive
             switch (VRModule.activeModule)
             {
                 case VRModuleActiveEnum.DayDream:
-                case VRModuleActiveEnum.WaveVR:
                     var pos = transform.localPosition;
                     transform.localPosition = new Vector3(pos.x, m_height, pos.y);
                     break;
